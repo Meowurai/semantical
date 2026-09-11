@@ -300,11 +300,11 @@ body:has(.business-app:not([hidden])>.mapping-open:not([hidden])) {--properties-
 .toolbar,.business-app .business-add {width:282px;justify-content:center}
 
 /* One toolbar owns mode selection and contextual actions on both canvases. */
-.toolbar.workspace-toolbar {position:fixed;z-index:20;left:calc((100% - var(--properties-width,0px))/2);bottom:28px;width:540px;max-width:calc(100vw - var(--properties-width,0px) - 24px);height:48px;justify-content:flex-start;gap:6px;transition:left 450ms cubic-bezier(.25,.1,.25,1);overflow-x:auto}
+.toolbar.workspace-toolbar {position:fixed;z-index:20;left:calc((100% - var(--properties-width,0px))/2);bottom:28px;width:max-content;max-width:calc(100vw - var(--properties-width,0px) - 24px);height:48px;justify-content:flex-start;gap:6px;transition:left 450ms cubic-bezier(.25,.1,.25,1),width 350ms cubic-bezier(.25,.1,.25,1);overflow-x:auto}
 .toolbar-view-switch {display:flex;flex:none;gap:2px;padding-right:6px;border-right:1px solid var(--border-41)}
 .toolbar .toolbar-view-switch button {padding:8px 10px;font-size:12px;color:var(--text-153)}
 .toolbar .toolbar-view-switch button[aria-pressed=true] {background:var(--surface-48);color:var(--text-252)}
-.toolbar-create-tools {display:flex;align-items:center;flex:1}
+.toolbar-create-tools {display:flex;align-items:center;flex:none;gap:2px}
 .toolbar.workspace-toolbar button {flex:none;padding-left:10px;padding-right:10px}
 .toolbar.workspace-toolbar button[hidden] {display:none}
 .read-only .toolbar.workspace-toolbar {display:flex}

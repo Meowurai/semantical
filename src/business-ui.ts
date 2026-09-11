@@ -69,13 +69,17 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
   const tableButton=toolbar.querySelector<HTMLButtonElement>('#add-table')!;tools.append(tableButton);
   const entityButton=button('Entity',createEntity);entityButton.setAttribute('aria-label','Create entity');
   const metricButton=button('Metric',createMetric);metricButton.setAttribute('aria-label','Create metric');tools.append(entityButton,metricButton);
-  for(const [action,label,icon] of [[tableButton,'Table',Table2],[entityButton,'Entity',Shapes],[metricButton,'Metric',ChartNoAxesCombined]] as const){action.replaceChildren(createElement(icon,{'aria-hidden':'true',width:16,height:16,'stroke-width':1.5}),el('span',label));}
+  for(const [action,label,icon] of [[tableButton,'Add table',Table2],[entityButton,'Add entity',Shapes],[metricButton,'Add metric',ChartNoAxesCombined]] as const){action.replaceChildren(createElement(icon,{'aria-hidden':'true',width:16,height:16,'stroke-width':1.5}),el('span',label));}
   const relations=relationshipManager(tables,()=>model,()=>{document.dispatchEvent(new Event('lineage-relationships-changed'));save();render();},isReadOnly);
   const relationsButton=button('Relationships',()=>relations.open(root.hidden?'lineage':'semantics'));toolbar.append(relationsButton);
   function updateToolbar(semantic:boolean){
     tableButton.hidden=semantic;entityButton.hidden=!semantic;metricButton.hidden=!semantic;
-    relationsButton.replaceChildren(createElement(semantic?Network:GitBranch,{width:16,height:16,'aria-hidden':'true'}),el('span',semantic?'Relationships':'Lineage links'));
+    relationsButton.replaceChildren(createElement(semantic?Network:GitBranch,{width:16,height:16,'aria-hidden':'true'}),el('span','Relationships'));
     relationsButton.setAttribute('aria-label',semantic?'Manage entity relationships':'Manage lineage relationships');
+    const visible=[...toolbar.children].filter(child=>getComputedStyle(child).display!=='none');
+    const style=getComputedStyle(toolbar);
+    const contentWidth=visible.reduce((sum,child)=>sum+child.getBoundingClientRect().width,0);
+    toolbar.style.width=`${Math.ceil(contentWidth+parseFloat(style.paddingLeft)+parseFloat(style.paddingRight)+Math.max(0,visible.length-1)*parseFloat(style.gap))}px`;
   }
   updateToolbar(false);
   const field=(label:string,value:string,change:(value:string)=>void,multiline=false)=>{const wrapper=el('label',label);const input=multiline?el('textarea'):el('input');input.value=value;if(input instanceof HTMLTextAreaElement)input.rows=2;input.setAttribute('aria-label',label);input.oninput=()=>{change(input.value);save();draw();};wrapper.append(input);return wrapper;};
