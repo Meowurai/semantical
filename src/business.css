@@ -331,3 +331,6 @@ body:has(.business-app:not([hidden])>.mapping-open:not([hidden])) {--properties-
 .canvas-controls-right .canvas-view-divider,.business-app .business-view-controls .canvas-view-divider {margin-top:5px}
 #trace-legend {bottom:220px}
 @media(max-width:600px){.canvas-controls-right,.business-view-controls {bottom:88px}#trace-legend {bottom:280px}}
+
+.canvas-controls-left {width:280px;min-width:0;max-width:calc(100vw - var(--properties-width,0px) - 88px)}
+.canvas-controls-left>input,.business-controls>input {width:280px;max-width:calc(100vw - var(--properties-width,0px) - 88px);height:34px}
