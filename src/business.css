@@ -310,3 +310,15 @@ body:has(.business-app:not([hidden])>.mapping-open:not([hidden])) {--properties-
 .read-only .toolbar.workspace-toolbar {display:flex}
 .read-only .workspace-toolbar .toolbar-create-tools {display:none}
 @media(prefers-reduced-motion:reduce){.toolbar.workspace-toolbar {transition:none}}
+
+@keyframes model-menu-open {
+  from {opacity:0;transform:translateY(-8px) scale(.98)}
+  to {opacity:1;transform:translateY(0) scale(1)}
+}
+.model-switch .share-menu:not([hidden]) {
+  transform-origin:top right;
+  animation:model-menu-open 400ms cubic-bezier(.22,1,.36,1) both;
+}
+@media(prefers-reduced-motion:reduce) {
+  .model-switch .share-menu:not([hidden]) {animation:none}
+}
