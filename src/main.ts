@@ -1196,3 +1196,7 @@ document.addEventListener('clear-lineage',()=>{if(isReadOnly())return;beginHisto
 document.addEventListener('import-lineage',event=>{if(isReadOnly())return;const data=(event as CustomEvent<ReturnType<typeof decodeSnapshot>>).detail;stopNavigation();nodes.splice(0,nodes.length,...data.nodes);columnScroll.clear();columnFilter=null;select(null);if(canvas.clientWidth>0)fitCanvas();else{zoom=data.zoom??1;render();}saveCanvas();});
 
 document.addEventListener('lineage-relationships-changed',()=>{render();saveCanvas();if(selected){const node=nodes.find(n=>n.id===selected);if(node)renderLineage(node);}});
+
+document.addEventListener('navigate-lineage-table',event=>navigateToTable((event as CustomEvent<string>).detail));
+document.addEventListener('fit-lineage',fitCanvas);
+document.addEventListener('arrange-lineage',()=>{if(isReadOnly())return;beginHistory();stopNavigation();columnFilter=null;layoutTables(nodes);fitCanvas();commitHistory();});

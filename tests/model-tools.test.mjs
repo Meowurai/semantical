@@ -235,3 +235,11 @@ const fullTables=companyExample(),fullBusiness=seedBusiness(fullTables);
 const fullModel=decodeModelFile(encodeModelFile(encodeSnapshot(fullTables,1266),fullBusiness));
 assert.equal(JSON.stringify(fullModel.semantics),JSON.stringify(fullBusiness));
 assert.equal(JSON.stringify(fullModel.lineage.nodes),JSON.stringify(fullTables));
+
+const {filterPalette}=load('palette-search');
+const entries=[{label:'Customer',detail:'Entity · Semantics'},{label:'customer_id',detail:'Column · bronze.orders'},{label:'Orders',detail:'Table · sales'}];
+assert.equal(filterPalette(entries,'customer')[0].label,'Customer');
+assert.equal(filterPalette(entries,'bronze customer')[0].label,'customer_id');
+assert.equal(filterPalette(entries,'unknown').length,0);
+assert.equal(filterPalette(entries,'  ').length,3);
+assert.equal(filterPalette(entries,'SALES')[0].label,'Orders');

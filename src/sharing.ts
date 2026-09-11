@@ -5,7 +5,7 @@ import {getThemePreference,setThemePreference} from './theme';
 import {undo,redo,historyState} from './history';
 import {decodeSnapshot} from './persistence';
 import {decodeBusiness,seedBusiness,type BusinessModel} from './business-model';
-import {createElement,Menu,Lock, Pencil,Moon,Sun,Monitor,Undo2,Redo2,Trash2,Info,Download,Upload,FlaskConical} from 'lucide';
+import {createElement,Menu,Lock, Pencil,Moon,Sun,Monitor,Undo2,Redo2,Trash2,Info,Download,Upload,FlaskConical,Search,Terminal,Keyboard} from 'lucide';
 export interface SharedModel {version:1;id:string;mode:'view'|'edit';physical:string;business:string}
 export let shared:SharedModel|undefined;
 export const isReadOnly=()=>shared?.mode==='view';
@@ -33,6 +33,8 @@ export function installShareMenu(nav:HTMLElement,snapshot:()=>string,business:()
   const panel=document.createElement('div');panel.className='share-menu';panel.hidden=true;panel.setAttribute('aria-label','Model menu');
   const close=()=>{panel.hidden=true;toggle.setAttribute('aria-expanded','false');};
   toggle.onclick=()=>{panel.hidden=!panel.hidden;toggle.setAttribute('aria-expanded',String(!panel.hidden));};
+  const navigation=document.createElement('div');navigation.className='history-actions';
+  for(const [label,icon,event,detail,key] of [['Search all models',Search,'open-palette','search','⌘P'],['Run command',Terminal,'open-palette','commands','⌘⇧P'],['Keyboard shortcuts',Keyboard,'open-hotkeys','','?']] as const){const action=document.createElement('button');action.type='button';const shortcut=document.createElement('kbd');shortcut.textContent=key;action.append(createElement(icon,{width:15,height:15,'aria-hidden':'true'}),document.createTextNode(label),shortcut);action.onclick=()=>{close();document.dispatchEvent(new CustomEvent(event,{detail}));};navigation.append(action);}panel.append(navigation);
   if(!isReadOnly()){
     const actions=document.createElement('div');actions.className='history-actions';
     const back=document.createElement('button'),forward=document.createElement('button');for(const [button,label,icon,shortcut] of [[back,'Undo',Undo2,'⌘Z'],[forward,'Redo',Redo2,'⌘⇧Z']] as const){

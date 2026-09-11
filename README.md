@@ -18,6 +18,12 @@ Open the menu and choose **Load demo** for a fictional Northstar wholesale model
 - Drag nodes, search, zoom, fit, or arrange the canvas. Right-click nodes for additional actions.
 - Choose System, Light, or Dark in the menu.
 
+## Keyboard navigation
+
+Use **⌘P** (Ctrl+P on Windows/Linux) for global model search and **⌘⇧P** (Ctrl+Shift+P) to run commands. Navigate results with arrow keys, Enter, and Escape.
+
+Press **?** or choose **Keyboard shortcuts** from the menu or command palette for the full map. Canvas shortcuts include 1/2 to switch modes, T/E/M to create objects, F to fit, A to arrange, R for relationships, and C for checks. They do not fire while typing or inside dialogs.
+
 ## Save, transfer, and share
 
 Changes save automatically in this browser. There is no backend, account system, or cloud synchronization. Clearing browser storage removes saved models.

@@ -1,7 +1,10 @@
+import {installCommandPalette,type PaletteItem} from './command-palette';
+import {installHotkeys} from './hotkeys';
+import {setThemePreference} from './theme';
 import {relationshipManager} from './relationships-ui';
 import {placeLabel} from './label-layout';
 import {mappingWorkspace} from './mapping-workspace';
-import {registerHistory,beginHistory,commitHistory} from './history';
+import {registerHistory,beginHistory,commitHistory,undo,redo,historyState} from './history';
 import {shared,isReadOnly,installShareMenu} from './sharing';
 import {nodeMenu} from './node-menu';
 import {createElement,Table2,Shapes,ChartNoAxesCombined,ArrowUpRight,Pencil,X,Plus,GitBranch,Network} from 'lucide';
@@ -312,5 +315,43 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
   let previousWidth=0;
   new ResizeObserver(()=>{if(root.hidden||restoringView)return;const width=stage.clientWidth;if(previousWidth){panX+=width-previousWidth;const selected=activeMetric??active;if(selected&&!drawer.hidden){panX=Math.min(panX,width-24-(selected.x+270)*zoom);}}previousWidth=width;applyView();}).observe(stage);
   if(writable){if(freshModel)arrange();save();}
+  const focusEntity=(entity:Entity,attributeId?:string)=>{switchView(true);section='Definition';open(entity);requestAnimationFrame(()=>{panX=(stage.clientWidth-270*zoom)/2-entity.x*zoom;panY=Math.max(32,(stage.clientHeight-250*zoom)/2)-entity.y*zoom;applyView();if(attributeId){const attr=entity.attributes.find(a=>a.id===attributeId);[...drawer.querySelectorAll<HTMLInputElement>('input')].find(input=>input.value===attr?.name)?.focus();}});};
+  const focusMetric=(metric:Metric)=>{switchView(true);active=undefined;activeMetric=metric;section='Definition';drawer.hidden=false;render();requestAnimationFrame(()=>{panX=(stage.clientWidth-270*zoom)/2-metric.x*zoom;panY=(stage.clientHeight-170*zoom)/2-metric.y*zoom;applyView();});};
+  const searchItems=():PaletteItem[]=>[
+    ...tables.flatMap(table=>{const qualified=[table.database,table.schema,table.name].filter(Boolean).join('.');return [
+      {id:`table:${table.id}`,label:table.name||'Untitled table',detail:`Table · ${qualified}`,kind:'table' as const,run:()=>{switchView(false);document.dispatchEvent(new CustomEvent('navigate-lineage-table',{detail:table.id}));}},
+      ...table.columns.map(column=>({id:`column:${table.id}:${column.id}`,label:column.name,detail:`Column · ${qualified}`,keywords:column.type,kind:'table' as const,run:()=>{switchView(false);trace(table.id,column.id);}}))];}),
+    ...model.entities.flatMap(entity=>[{id:`entity:${entity.id}`,label:entity.name||'Untitled entity',detail:'Entity · Semantics',kind:'entity' as const,run:()=>focusEntity(entity)},...entity.attributes.map(attribute=>({id:`attribute:${entity.id}:${attribute.id}`,label:attribute.name,detail:`Attribute · ${entity.name}`,kind:'entity' as const,run:()=>focusEntity(entity,attribute.id)}))]),
+    ...model.metrics.map(metric=>({id:`metric:${metric.id}`,label:metric.name||'Untitled metric',detail:`Metric · ${model.entities.find(entity=>entity.id===metric.entityId)?.name||'Unbound'}`,kind:'metric' as const,run:()=>focusMetric(metric)}))
+  ];
+  const menuAction=(label:string)=>{const action=[...nav.querySelectorAll<HTMLButtonElement>('.share-menu button')].find(button=>button.textContent===label);if(!action)return;const menu=nav.querySelector<HTMLElement>('.share-menu')!;menu.hidden=false;nav.querySelector('[aria-expanded]')?.setAttribute('aria-expanded','true');action.click();};
+  const commands=():PaletteItem[]=>{
+    const item=(id:string,label:string,detail:string,run:()=>void):PaletteItem=>({id,label,detail,kind:'command',run});
+    return [
+      item('search','Search all models','⌘P · Tables, columns, entities, attributes and metrics',()=>document.dispatchEvent(new CustomEvent('open-palette',{detail:'search'}))),
+      item('commands','Open command palette','⌘⇧P · Run an action',()=>document.dispatchEvent(new CustomEvent('open-palette',{detail:'commands'}))),
+      item('hotkeys','Keyboard shortcuts','? · Show the hotkey map',()=>document.dispatchEvent(new Event('open-hotkeys'))),
+      item('lineage','Switch to Lineage','1 · View tables and data flow',()=>switchView(false)),
+      item('semantics','Switch to Semantics','2 · View entities and metrics',()=>switchView(true)),
+      item('fit','Fit canvas','F · Frame the current model',()=>{if(root.hidden)document.dispatchEvent(new Event('fit-lineage'));else fit();}),
+      item('relations','Manage relationships','R · List and edit relationships for this mode',()=>relations.open(root.hidden?'lineage':'semantics')),
+      item('checks','Show checks','C · Review model issues',()=>{if(root.hidden)document.querySelector<HTMLButtonElement>('#validation-button')?.click();else checksButton.click();}),
+      item('export','Export models','Save both models as JSON',()=>menuAction('Export models…')),
+      ...(['system','light','dark'] as const).map(theme=>item(`theme-${theme}`,`Theme: ${theme[0].toUpperCase()+theme.slice(1)}`,'Change appearance',()=>{setThemePreference(theme);nav.querySelectorAll<HTMLButtonElement>('[data-theme-choice]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.themeChoice===theme)));})),
+      ...(!isReadOnly()?[
+        item('table','Create table','T · Add a table to Lineage',()=>{switchView(false);tableButton.click();}),
+        item('entity','Create entity','E · Add a business entity',()=>entityButton.click()),
+        item('metric','Create metric','M · Add a metric',()=>metricButton.click()),
+        item('arrange','Arrange canvas','A · Organize the current model',()=>{if(root.hidden)document.dispatchEvent(new Event('arrange-lineage'));else{beginHistory();arrange();draw();fit();save();commitHistory();}}),
+        item('import','Import models','Load models from a JSON file',()=>menuAction('Import models…')),
+        item('demo','Load demo','Load the Northstar company example',()=>menuAction('Load demo…')),
+        item('clear','Clear canvas','Clear the current mode after confirmation',()=>menuAction('Clear canvas…')),
+        ...(historyState().undo?[item('undo','Undo','⌘Z · Undo the last change',undo)]:[]),
+        ...(historyState().redo?[item('redo','Redo','⌘⇧Z · Redo the last change',redo)]:[])
+      ]:[])
+    ];
+  };
+  installCommandPalette(searchItems,commands);
+  installHotkeys(commands,[{key:'1',label:'Switch to Lineage',command:'lineage'},{key:'2',label:'Switch to Semantics',command:'semantics'},{key:'t',label:'Create table',command:'table'},{key:'e',label:'Create entity',command:'entity'},{key:'m',label:'Create metric',command:'metric'},{key:'f',label:'Fit canvas',command:'fit'},{key:'a',label:'Arrange canvas',command:'arrange'},{key:'r',label:'Manage relationships',command:'relations'},{key:'c',label:'Show checks',command:'checks'},{key:'?',label:'Keyboard shortcuts',command:'hotkeys'}]);
   registerHistory('business',{read:()=>model,write:value=>{model=value;active=undefined;activeMetric=undefined;drawer.hidden=true;save();render();}});
 }
