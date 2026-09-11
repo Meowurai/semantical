@@ -1,0 +1,4 @@
+.node-context-menu {position:fixed;z-index:100;width:168px;padding:5px;background:var(--surface-32);border:1px solid var(--border-56);border-radius:8px;box-shadow:0 8px 28px #0007}
+.node-context-menu button {display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:4px;background:transparent;color:var(--text-221);text-align:left;font-size:12px}
+.node-context-menu button:hover,.node-context-menu button:focus {background:var(--surface-48);outline:none}
+.node-context-menu button.danger {color:var(--accent-red);border-top:1px solid var(--border-51);border-radius:0 0 4px 4px;margin-top:3px}

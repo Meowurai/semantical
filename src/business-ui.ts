@@ -1,0 +1,314 @@
+import {placeLabel} from './label-layout';
+import {mappingWorkspace} from './mapping-workspace';
+import {registerHistory,beginHistory,commitHistory} from './history';
+import {shared,isReadOnly,installShareMenu} from './sharing';
+import {nodeMenu} from './node-menu';
+import {createElement,Table2,Shapes,ChartNoAxesCombined,ArrowUpRight,Pencil,X,Plus} from 'lucide';
+import {arrangeSemantic} from './semantic-layout';
+import {routeAssociations,roundedPath} from './routing';
+import {coverage,decodeBusiness,seedBusiness,metricIssues,type Metric,type BusinessModel,type Entity,type Attribute} from './business-model';
+import type {TableNode} from './types';
+import './business.css';
+export function initBusiness(tables:TableNode[],key:string,example:boolean,physicalSnapshot:()=>string,trace:(tableId:string,columnId:string)=>void) {
+  const el=<K extends keyof HTMLElementTagNameMap>(tag:K,text='',cls='')=>{const n=document.createElement(tag);n.textContent=text;n.className=cls;return n;};
+  const button=(text:string,fn:()=>void)=>{const b=el('button',text);b.type='button';b.onclick=fn;return b;};
+  const physical=document.querySelector<HTMLElement>('#app')!;
+  const root=el('div','','business-app');root.hidden=true;document.body.append(root);
+  const stage=el('main','','business-stage');stage.setAttribute('aria-label','Business entity canvas');
+  const drawing=el('div','','business-drawing');stage.append(drawing);
+  const drawer=el('aside','','business-drawer');drawer.hidden=true;root.append(stage,drawer);
+  const nav=el('nav','','model-switch');nav.setAttribute('aria-label','Model views');document.body.append(nav);
+  let activeMetric:Metric|undefined;let active:Entity|undefined;let section='Definition';let zoom=1,panX=0,panY=0;let writable=true;let firstView=true;let freshModel=false;
+  let model:BusinessModel={version:1,entities:[],relationships:[],metrics:[]};
+  const notice=el('p','','business-notice');root.append(notice);notice.hidden=true;
+  try {const raw=(isReadOnly()?null:localStorage.getItem(key))??shared?.business;freshModel=!raw;model=raw?decodeBusiness(raw):example?seedBusiness(tables):model;if(raw&&example&&!Object.hasOwn(JSON.parse(raw),'metrics')){
+    const entity=model.entities.find(e=>e.name==='Order Line');const amount=entity?.attributes.find(a=>a.name==='Net amount');
+    if(entity&&amount)model.metrics.push({id:crypto.randomUUID(),name:'Net revenue',definition:'Sum of net order-line amounts. Review cancellation and recognition rules before use.',entityId:entity.id,attributeId:amount.id,aggregation:'Sum',timeAttributeId:entity.attributes.find(a=>a.name==='Order date')?.id??'',dimensions:[],filters:'',representationId:entity.representations[0]?.id??'',x:entity.x+440,y:entity.y});
+  }}
+  catch {writable=false;notice.textContent='Saved business model could not be loaded. Saving is paused to protect it.';notice.hidden=false;}
+  const save=()=>{if(isReadOnly()||!writable)return;try{localStorage.setItem(key,JSON.stringify(model));notice.hidden=true;}catch{notice.textContent='Business changes could not be saved locally. Keep this tab open.';notice.hidden=false;}};
+  const switchView=(business:boolean)=>{physical.hidden=business;root.hidden=!business;p.setAttribute('aria-pressed',String(!business));b.setAttribute('aria-pressed',String(business));if(business){render();if(firstView){firstView=false;requestAnimationFrame(fit);}}};
+  const p=button('Lineage',()=>switchView(false)),b=button('Semantics',()=>switchView(true));nav.append(p,b);p.setAttribute('aria-pressed','true');b.setAttribute('aria-pressed','false');installShareMenu(nav,physicalSnapshot,()=>model,()=>root.hidden?{
+    name:'Lineage',description:'Remove all tables and lineage connections. Semantic bindings will be reported as missing.',run:()=>document.dispatchEvent(new Event('clear-lineage'))
+  }:{name:'Semantics',description:'Remove all entities, metrics, relationships and semantic mappings. Physical tables remain.',run:()=>{beginHistory();model={version:1,entities:[],relationships:[],metrics:[]};active=undefined;activeMetric=undefined;drawer.hidden=true;save();render();commitHistory();}},data=>{beginHistory();document.dispatchEvent(new CustomEvent('import-lineage',{detail:data.lineage}));model=data.semantics;active=undefined;activeMetric=undefined;drawer.hidden=true;search.value='';save();render();fit();commitHistory();});
+  const arrange=()=>arrangeSemantic(model);
+  const controls=el('div','','business-controls');
+  const search=el('input');search.type='search';search.placeholder='Find entity or metric...';search.setAttribute('aria-label','Find entity');search.oninput=()=>draw();
+  const checksPanel=el('div','','business-checks-panel');checksPanel.hidden=true;stage.append(checksPanel);
+  const checksButton=button('Checks',()=>{checksPanel.hidden=!checksPanel.hidden;refreshChecks();});
+  function refreshChecks(){
+    checksPanel.replaceChildren();let count=0;
+    for(const entity of model.entities){const issues=[...(!entity.name.trim()?['Entity name is required']:[]),...(!entity.grain.trim()?['Grain is undefined']:[]),...(coverage(entity,tables)!=='Mapped'?['Physical mapping is incomplete']:[])];for(const issue of issues){count++;checksPanel.append(button(`${entity.name} — ${issue}`,()=>{checksPanel.hidden=true;section=issue.includes('mapping')?'Mappings':'Definition';open(entity);}));}}
+    for(const metric of model.metrics)for(const issue of metricIssues(metric,model,tables)){count++;checksPanel.append(button(`${metric.name} — ${issue}`,()=>{checksPanel.hidden=true;active=undefined;activeMetric=metric;section='Implementation';drawer.hidden=false;render();}));}
+    checksButton.textContent=`Checks · ${count}`;if(!count)checksPanel.append(el('p','No definition issues found.'));
+  }
+  const applyView=()=>{drawing.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;zoomLabel.textContent=`${Math.round(zoom*100)}%`;};
+  const zoomLabel=button('100%',()=>{zoom=1;applyView();});zoomLabel.setAttribute('aria-label','Reset business zoom');
+  const fit=()=>{if(!model.entities.length&&!model.metrics.length)return;const maxX=Math.max(...[...model.entities,...model.metrics].map(e=>e.x+270)),maxY=Math.max(...[...model.entities.map(e=>e.y+48+Math.min(252,16+e.attributes.length*32)),...model.metrics.map(m=>m.y+170)]);zoom=Math.min(1,(stage.clientWidth-60)/maxX,(stage.clientHeight-100)/maxY);panX=20;panY=30;applyView();};
+  const viewControls=el('div','','business-view-controls');viewControls.setAttribute('role','group');viewControls.setAttribute('aria-label','Canvas view');
+  controls.append(search,checksButton);
+  viewControls.append(button('−',()=>{zoom=Math.max(.25,zoom/1.2);applyView();}),zoomLabel,button('+',()=>{zoom=Math.min(2,zoom*1.2);applyView();}),button('Fit',fit),button('Arrange',()=>{beginHistory();arrange();draw();fit();save();commitHistory();}));stage.append(controls,viewControls);
+  const createMetric=()=>{
+    switchView(true);active=undefined;section='Definition';
+    const metric:Metric={id:crypto.randomUUID(),name:'New metric',definition:'',entityId:'',attributeId:'',aggregation:'Sum',timeAttributeId:'',dimensions:[],filters:'',representationId:'',x:(stage.clientWidth/2-panX)/zoom-135,y:(stage.clientHeight/2-panY)/zoom};
+    model.metrics.push(metric);activeMetric=metric;drawer.hidden=false;render();save();
+  };
+  const createEntity=()=>{
+    switchView(true);section='Definition';
+    const entity:Entity={id:crypto.randomUUID(),name:'New entity',definition:'',grain:'',rules:'',x:(stage.clientWidth/2-panX)/zoom-135,y:(stage.clientHeight/2-panY)/zoom,attributes:[],representations:[]};
+    model.entities.push(entity);open(entity);save();
+  };
+  const entityButton=button('+ Entity',createEntity);entityButton.setAttribute('aria-label','Create entity');
+  physical.querySelector('.toolbar')!.append(entityButton);
+  const addMenu=el('div','','business-add');addMenu.setAttribute('role','toolbar');addMenu.setAttribute('aria-label','Create objects');
+  const addTable=button('+ Table',()=>{switchView(false);physical.querySelector<HTMLButtonElement>('#add-table')!.click();});addTable.setAttribute('aria-label','Create table');
+  const addEntity=button('+ Entity',createEntity);addEntity.setAttribute('aria-label','Create entity');
+  const metricButton=button('+ Metric',createMetric);metricButton.setAttribute('aria-label','Create metric');
+  physical.querySelector('.toolbar')!.append(metricButton);
+  const addMetric=button('+ Metric',createMetric);addMetric.setAttribute('aria-label','Create metric');
+  addMenu.append(addTable,addEntity,addMetric);stage.append(addMenu);
+  for(const menu of [physical.querySelector('.toolbar')!,addMenu]) {
+    for(const [label,icon] of [['Table',Table2],['Entity',Shapes],['Metric',ChartNoAxesCombined]] as const) {
+      const action=menu.querySelector<HTMLButtonElement>(`[aria-label="Create ${label.toLowerCase()}"]`)!;
+      action.replaceChildren(createElement(icon,{'aria-hidden':'true',width:16,height:16,'stroke-width':1.5}),el('span',label));
+    }
+  }
+  const field=(label:string,value:string,change:(value:string)=>void,multiline=false)=>{const wrapper=el('label',label);const input=multiline?el('textarea'):el('input');input.value=value;if(input instanceof HTMLTextAreaElement)input.rows=2;input.setAttribute('aria-label',label);input.oninput=()=>{change(input.value);save();draw();};wrapper.append(input);return wrapper;};
+  const select=(label:string,value:string,options:[string,string][],change:(value:string)=>void)=>{const input=el('select');input.setAttribute('aria-label',label);options.forEach(([v,t])=>input.add(new Option(t,v)));input.value=value;input.onchange=()=>{change(input.value);save();render();};return input;};
+  const check=(label:string,value:boolean,change:(value:boolean)=>void)=>{const l=el('label',label,'business-check');const i=el('input');i.type='checkbox';i.checked=value;i.onchange=()=>{change(i.checked);save();draw();};l.prepend(i);return l;};
+  const open=(entity:Entity)=>{activeMetric=undefined;active=entity;drawer.hidden=false;render();requestAnimationFrame(()=>{const right=(entity.x+270)*zoom+panX;if(right>stage.clientWidth-24){panX-=right-stage.clientWidth+24;applyView();}});};
+  let restoringView=false;
+  let semanticReturn:(()=>void)|undefined;
+  const captureSemantic=()=>{
+    const saved={entity:active?.id,metric:activeMetric?.id,section,zoom,panX,panY,hidden:drawer.hidden,scroll:drawer.scrollTop};
+    return ()=>{restoringView=true;switchView(true);active=model.entities.find(e=>e.id===saved.entity);activeMetric=model.metrics.find(m=>m.id===saved.metric);section=saved.section;drawer.hidden=saved.hidden;zoom=saved.zoom;panX=saved.panX;panY=saved.panY;render();drawer.scrollTop=saved.scroll;
+      setTimeout(()=>{panX=saved.panX;panY=saved.panY;previousWidth=stage.clientWidth;applyView();restoringView=false;},500);};
+  };
+  const returnButton=button('← Back to Semantics',()=>{semanticReturn?.();returnButton.hidden=true;});returnButton.className='trace-return';returnButton.hidden=true;physical.querySelector('.canvas-controls-left')!.append(returnButton);
+  function goTrace(tableId:string,columnId:string){semanticReturn=captureSemantic();switchView(false);trace(tableId,columnId);returnButton.hidden=false;}
+  const physicalReturn=button('← Back to Lineage',()=>{});physicalReturn.hidden=true;controls.append(physicalReturn);
+  document.addEventListener('semantic-usage',event=>{const detail=(event as CustomEvent).detail;physicalReturn.hidden=false;physicalReturn.onclick=()=>{switchView(false);detail.restore?.();physicalReturn.hidden=true;};switchView(true);if(detail.metricId){active=undefined;activeMetric=model.metrics.find(m=>m.id===detail.metricId);section='Implementation';}else{activeMetric=undefined;active=model.entities.find(e=>e.id===detail.entityId);section='Mappings';}drawer.hidden=false;render();});
+  document.addEventListener('request-semantic-usage',event=>{const {tableId,columnId,container,restore}=(event as CustomEvent).detail;
+    for(const entity of model.entities)for(const rep of entity.representations.filter(r=>r.tableId===tableId))for(const attribute of entity.attributes.filter(a=>rep.bindings[a.id]===columnId)){
+      const link=button(`${entity.name} · ${attribute.name} — ${rep.name}`,()=>document.dispatchEvent(new CustomEvent('semantic-usage',{detail:{entityId:entity.id,restore}})));link.dataset.readonlyNavigation='true';container.append(link);
+      for(const metric of model.metrics.filter(m=>m.entityId===entity.id&&m.representationId===rep.id&&[m.attributeId,m.timeAttributeId,...m.dimensions].includes(attribute.id))){const metricLink=button(`${metric.name} — metric dependency`,()=>document.dispatchEvent(new CustomEvent('semantic-usage',{detail:{metricId:metric.id,restore}})));metricLink.dataset.readonlyNavigation='true';container.append(metricLink);}
+    }
+  });
+  let traceMenu:HTMLElement|undefined;
+  const closeTraceMenu=()=>{traceMenu?.remove();traceMenu=undefined;};
+  document.addEventListener('pointerdown',event=>{if(traceMenu&&!traceMenu.contains(event.target as Node))closeTraceMenu();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeTraceMenu();});
+  function nodeTrace(label:string,bindings:{name:string;tableId:string;columnId:string}[]) {
+    const valid=bindings.filter(ref=>tables.some(t=>t.id===ref.tableId&&t.columns.some(c=>c.id===ref.columnId)));
+    const go=(ref:typeof valid[number])=>{closeTraceMenu();goTrace(ref.tableId,ref.columnId);};
+    const action=button('Trace',()=>{
+      if(valid.length===1){go(valid[0]);return;}
+      closeTraceMenu();
+      const menu=el('div','','node-trace-menu');menu.setAttribute('role','group');menu.setAttribute('aria-label',`Choose mapping for ${label}`);
+      menu.append(el('p','Choose physical representation'));
+      for(const ref of valid)menu.append(button(ref.name,()=>go(ref)));
+      const rect=action.getBoundingClientRect();menu.style.left=`${Math.max(8,Math.min(rect.left,window.innerWidth-292))}px`;menu.style.top=`${Math.max(8,Math.min(rect.bottom+6,window.innerHeight-180))}px`;
+      document.body.append(menu);traceMenu=menu;menu.querySelector('button')?.focus({preventScroll:true});
+    });
+    action.replaceChildren(createElement(ArrowUpRight,{width:14,height:14,'aria-hidden':'true','stroke-width':1.5}));action.className='node-trace';action.setAttribute('aria-label',`Trace ${label}`);action.disabled=!valid.length;action.title=valid.length?'Trace physical lineage':'No physical binding available';
+    return action;
+  }
+  function draw() {
+    closeTraceMenu();
+    refreshChecks();
+    drawing.replaceChildren();
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.classList.add('business-links');drawing.append(svg);
+    const routes=routeAssociations([...model.entities.map(e=>({id:e.id,x:e.x,y:e.y,width:270,height:48+Math.min(252,16+e.attributes.length*32)})),...model.metrics.map(m=>({id:m.id,x:m.x,y:m.y,width:270,height:162}))],[...model.relationships.map(r=>({source:r.from,target:r.to})),...model.metrics.map(m=>({source:m.entityId,target:m.id}))]);
+    const labelObstacles=[...model.entities.map(e=>({id:e.id,x:e.x,y:e.y,width:270,height:48+Math.min(252,16+e.attributes.length*32)})),...model.metrics.map(m=>({id:m.id,x:m.x,y:m.y,width:270,height:162}))];
+    for(const r of model.relationships) {
+      const from=model.entities.find(e=>e.id===r.from),to=model.entities.find(e=>e.id===r.to);if(!from||!to)continue;
+      const routed=routes.find(edge=>edge.source===r.from&&edge.target===r.to);if(!routed)continue;
+      routed.points=dragPoints(routed.points);
+      const labelText=`${r.name} · ${{'One to one':'1:1','One to many':'1:N','Many to one':'N:1','Many to many':'N:N'}[r.cardinality]??r.cardinality}`;
+      const placement=placeLabel(routed.points,Math.min(260,labelText.length*6+24),30,labelObstacles);
+      if(!placement)continue;labelObstacles.push(placement.box);
+      const line=document.createElementNS(svg.namespaceURI,'path');line.setAttribute('d',roundedPath(routed.points));line.setAttribute('data-relationship',r.id);line.setAttribute('data-label-segment',String(placement.index));line.setAttribute('data-label-t',String(placement.t));line.setAttribute('data-from',from.id);line.setAttribute('data-to',to.id);line.setAttribute('data-points',JSON.stringify(routed.points));svg.append(line);
+      const label=button(labelText,()=>{section='Relationships';open(from);});label.className='business-link-label';label.dataset.relationship=r.id;label.style.left=`${placement.x}px`;label.style.top=`${placement.y}px`;drawing.append(label);
+    }
+    for(const entity of model.entities) {
+      const card=el('article','','business-node');card.style.left=`${entity.x}px`;card.style.top=`${entity.y}px`;card.classList.toggle('selected',active===entity);card.style.opacity=search.value&&!entity.name.toLowerCase().includes(search.value.toLowerCase())?'.18':'1';
+      const header=button('',()=>{section='Definition';open(entity);});header.className='business-node-header';
+      header.append(createElement(Shapes,{width:16,height:16,'stroke-width':1.5,'aria-hidden':'true'}),el('span',entity.name||'Unnamed entity','entity-name'));
+      installDrag(header,card,entity);
+      const status=el('span','','entity-status');status.title=coverage(entity,tables);status.setAttribute('aria-label',coverage(entity,tables));status.classList.toggle('incomplete',coverage(entity,tables)!=='Mapped');header.append(status);card.append(header);
+      const attributes=el('div','','entity-attributes');attributes.setAttribute('aria-label',`Attributes of ${entity.name}`);
+      for(const attribute of entity.attributes){
+        const wrapper=el('div','','business-attribute-row');
+        const row=button('',()=>{section='Mappings';open(entity);drawer.querySelector<HTMLElement>(`[data-attribute="${attribute.id}"]`)?.focus();});row.className='business-attribute';
+        const name=el('span',attribute.name||'Unnamed attribute','entity-attribute-name');name.title=attribute.definition||attribute.name;
+        const badges=el('span','','entity-attribute-flags');
+        if(attribute.identifier){const badge=el('span','ID','entity-id-badge');badge.title='Business identifier';badges.append(badge);}
+        if(attribute.required&&!attribute.identifier){const required=el('span','*','entity-required');required.title='Required';required.setAttribute('aria-label','Required');badges.append(required);}
+        row.append(name,badges,el('small',attribute.type.toLowerCase()));
+        wrapper.append(row,nodeTrace(`${entity.name}.${attribute.name}`,entity.representations.map(r=>({name:r.name+' · '+r.purpose,tableId:r.tableId,columnId:r.bindings[attribute.id]}))));attributes.append(wrapper);
+      }
+      if(!entity.attributes.length)attributes.append(el('p','No attributes yet','business-muted'));
+      attributes.addEventListener('wheel',event=>{if(attributes.scrollHeight>attributes.clientHeight&&Math.abs(event.deltaY)>=Math.abs(event.deltaX)&&!event.ctrlKey)event.stopPropagation();});
+      card.append(attributes);
+      card.tabIndex=0;
+      nodeMenu(card,{
+        edit:()=>{section='Definition';open(entity);},
+        pin:{label:entity.pinned?'Unpin position':'Pin position',action:()=>{entity.pinned=!entity.pinned;save();draw();}},
+        duplicate:()=>{
+          const copy=structuredClone(entity);copy.id=crypto.randomUUID();copy.name=`${entity.name || 'Entity'} copy`;copy.x+=36;copy.y+=36;
+          const ids=new Map(copy.attributes.map(a=>[a.id,crypto.randomUUID()]));for(const a of copy.attributes)a.id=ids.get(a.id)!;
+          for(const rep of copy.representations){rep.id=crypto.randomUUID();rep.bindings=Object.fromEntries(Object.entries(rep.bindings).map(([id,value])=>[ids.get(id)??id,value]));}
+          model.entities.push(copy);section='Definition';open(copy);save();
+        },
+        delete:()=>{if(!confirm(`Delete ${entity.name} and its relationships? Metrics that use it will be flagged in Checks.`))return;model.entities=model.entities.filter(e=>e!==entity);model.relationships=model.relationships.filter(r=>r.from!==entity.id&&r.to!==entity.id);if(active===entity){active=undefined;drawer.hidden=true;}save();render();}
+      });
+      drawing.append(card);
+    }
+    drawMetrics(routes);
+    applyView();
+  }
+  function drawMetrics(routes:ReturnType<typeof routeAssociations>) {
+    for(const metric of model.metrics){
+      const entity=model.entities.find(e=>e.id===metric.entityId);
+      const attribute=entity?.attributes.find(a=>a.id===metric.attributeId);
+      const card=el('article','','business-node metric-node');card.style.left=`${metric.x}px`;card.style.top=`${metric.y}px`;card.classList.toggle('selected',activeMetric===metric);
+      card.style.opacity=search.value&&!metric.name.toLowerCase().includes(search.value.toLowerCase())?'.18':'1';
+      const openMetric=()=>{active=undefined;activeMetric=metric;section='Definition';drawer.hidden=false;render();requestAnimationFrame(()=>{panX=Math.min(panX,stage.clientWidth-24-(metric.x+270)*zoom);applyView();});};
+      const header=button('',openMetric);header.className='business-node-header';
+      const issues=metricIssues(metric,model,tables);
+      const status=el('span','','metric-status');status.classList.toggle('incomplete',!!issues.length);status.title=issues.length?'Incomplete metric':'Metric is fully bound';
+      header.append(createElement(ChartNoAxesCombined,{width:16,height:16,'aria-hidden':'true','stroke-width':1.5}),el('span',metric.name||'Unnamed metric','metric-name'),status);
+      installDrag(header,card,metric);
+      const body=el('div','','metric-body');
+      const content=button('',openMetric);content.className='metric-calculation';
+      content.append(el('span',metric.aggregation,'metric-aggregation'),el('span',attribute?.name??'Choose attribute','metric-value'));
+      const wrapper=el('div','','business-attribute-row metric-calculation-row');
+      const representation=entity?.representations.find(r=>r.id===metric.representationId);
+      wrapper.append(content,nodeTrace(metric.name,representation?[{name:representation.name,tableId:representation.tableId,columnId:representation.bindings[metric.attributeId]}]:[]));
+      const details=el('dl','','metric-context');
+      const time=entity?.attributes.find(a=>a.id===metric.timeAttributeId);
+      for(const [label,value] of [['Entity',entity?.name??'Not selected'],['Time',time?.name??'No time basis']]) {
+        const term=el('dt',label);const detail=el('dd',value);detail.title=value;details.append(term,detail);
+      }
+      body.append(wrapper,details);card.append(header,body);drawing.append(card);
+      card.tabIndex=0;
+      nodeMenu(card,{
+        edit:openMetric,
+        pin:{label:metric.pinned?'Unpin position':'Pin position',action:()=>{metric.pinned=!metric.pinned;save();draw();}},
+        duplicate:()=>{const copy=structuredClone(metric);copy.id=crypto.randomUUID();copy.name=`${metric.name || 'Metric'} copy`;copy.x+=36;copy.y+=36;model.metrics.push(copy);active=undefined;activeMetric=copy;section='Definition';drawer.hidden=false;save();render();},
+        delete:()=>{if(!confirm(`Delete ${metric.name}?`))return;model.metrics=model.metrics.filter(m=>m!==metric);if(activeMetric===metric){activeMetric=undefined;drawer.hidden=true;}save();render();}
+      });
+      const metricRoute=routes.find(r=>r.source===entity?.id&&r.target===metric.id);
+      if(entity&&metricRoute){const svg=drawing.querySelector('svg')!;const line=document.createElementNS(svg.namespaceURI,'path');const pts=dragPoints(metricRoute.points);line.setAttribute('d',roundedPath(pts));line.setAttribute('data-from',entity.id);line.setAttribute('data-to',metric.id);line.setAttribute('data-points',JSON.stringify(pts));line.setAttribute('stroke-dasharray','6 4');svg.append(line);}
+    }
+  }
+  function renderMetric(metric:Metric) {
+    const header=el('header','Metric properties');const close=button('×',()=>{activeMetric=undefined;drawer.hidden=true;draw();});close.setAttribute('aria-label','Close metric properties');header.append(close);drawer.append(header);
+    const tabs=el('div','','business-tabs');for(const name of ['Definition','Implementation']){const tab=button(name,()=>{section=name;render();});tab.setAttribute('aria-pressed',String(section===name));tabs.append(tab);}drawer.append(tabs);
+    const entity=model.entities.find(e=>e.id===metric.entityId);
+    const attribute=entity?.attributes.find(a=>a.id===metric.attributeId);
+    const rep=entity?.representations.find(r=>r.id===metric.representationId);
+    if(section==='Definition') {
+      drawer.append(field('Metric name',metric.name,v=>metric.name=v),field('Business definition',metric.definition,v=>metric.definition=v,true));
+      const entityLabel=el('label','Business entity');entityLabel.append(select('Metric entity',metric.entityId,[['','Choose entity...'],...model.entities.map(e=>[e.id,e.name] as [string,string])],v=>{metric.entityId=v;metric.attributeId='';metric.timeAttributeId='';metric.dimensions=[];metric.representationId='';}));drawer.append(entityLabel);
+      const valueLabel=el('label','Value attribute');valueLabel.append(select('Value attribute',metric.attributeId,[['','Choose attribute...'],...(entity?.attributes??[]).map(a=>[a.id,a.name] as [string,string])],v=>metric.attributeId=v));drawer.append(valueLabel);
+      const aggregation=el('label','Aggregation');aggregation.append(select('Aggregation',metric.aggregation,['Sum','Average','Count','Distinct count','Minimum','Maximum'].map(v=>[v,v]),v=>metric.aggregation=v as Metric['aggregation']));drawer.append(aggregation);
+      const time=el('label','Time basis');time.append(select('Time basis',metric.timeAttributeId,[['','No time basis'],...(entity?.attributes??[]).filter(a=>a.type==='Date').map(a=>[a.id,a.name] as [string,string])],v=>metric.timeAttributeId=v));drawer.append(time);
+      const dimensions=el('details','','drawer-disclosure');const dimensionTitle=el('summary',`Dimensions · ${metric.dimensions.length}`);dimensions.append(dimensionTitle);const options=el('div','','dimension-options');
+      for(const a of entity?.attributes??[])options.append(check(a.name,metric.dimensions.includes(a.id),v=>{metric.dimensions=v?[...metric.dimensions,a.id]:metric.dimensions.filter(id=>id!==a.id);dimensionTitle.textContent=`Dimensions · ${metric.dimensions.length}`;}));
+      if(!entity?.attributes.length)options.append(el('p','Select an entity to choose dimensions.','business-muted'));dimensions.append(options);drawer.append(dimensions);
+      const filters=el('details','','drawer-disclosure');filters.open=!!metric.filters;filters.append(el('summary','Business filters'),field('Filter definition',metric.filters,v=>metric.filters=v,true),el('p','Describe business intent; filters are not executable SQL.','business-muted'));drawer.append(filters);
+    } else {
+      const label=el('label','Physical representation');label.append(select('Metric representation',metric.representationId,[['','Choose representation...'],...(entity?.representations??[]).map(r=>[r.id,`${r.name} · ${r.purpose}`] as [string,string])],v=>metric.representationId=v));drawer.append(label);
+      const grid=el('table','','business-mapping-table');const h=grid.createTHead().insertRow();for(const title of ['Business attribute','Physical binding','']){const th=el('th',title);h.append(th);}const body=grid.createTBody();
+      for(const id of [...new Set([metric.attributeId,metric.timeAttributeId,...metric.dimensions].filter(Boolean))]) {
+        const a=entity?.attributes.find(a=>a.id===id),table=tables.find(t=>t.id===rep?.tableId),column=table?.columns.find(c=>c.id===rep?.bindings[id]);const row=body.insertRow();row.insertCell().textContent=a?.name??'Missing attribute';row.insertCell().textContent=column&&table?`${table.name}.${column.name}`:'Unmapped';const traceButton=button('Trace',()=>{if(table&&column){goTrace(table.id,column.id);}});traceButton.disabled=!column;row.insertCell().append(traceButton);
+      }drawer.append(grid);
+      drawer.append(el('p',`${metric.aggregation} of ${entity?.name??'entity'}.${attribute?.name??'attribute'}. Physical bindings are inherited from the entity representation.`, 'business-muted'));
+    }
+    const issues=metricIssues(metric,model,tables);for(const issue of issues)drawer.append(el('p',issue,'business-issue'));
+    drawer.append(button('Delete metric',()=>{if(!confirm(`Delete ${metric.name}?`))return;model.metrics=model.metrics.filter(m=>m!==metric);activeMetric=undefined;drawer.hidden=true;save();render();}));
+  }
+  function dragPoints(raw:{x:number;y:number}[]) {
+    const points=raw.filter((p,i)=>!i||i===raw.length-1||!((raw[i-1].x===p.x&&p.x===raw[i+1].x)||(raw[i-1].y===p.y&&p.y===raw[i+1].y))).map(p=>({...p}));
+    if(points.length===2){const [a,b]=points;points.splice(1,0,...(a.x===b.x?[{x:a.x,y:(a.y+b.y)/2},{x:b.x,y:(a.y+b.y)/2}]:[{x:(a.x+b.x)/2,y:a.y},{x:(a.x+b.x)/2,y:b.y}]));}
+    return points;
+  }
+  function installDrag(header:HTMLButtonElement,card:HTMLElement,item:{id:string;x:number;y:number}) {
+    let start:{x:number;y:number;left:number;top:number}|undefined;
+    header.onpointerdown=e=>{if(e.button!==0||isReadOnly())return;start={x:e.clientX,y:e.clientY,left:item.x,top:item.y};header.setPointerCapture(e.pointerId);};
+    header.onpointermove=e=>{if(!start)return;item.x=start.left+(e.clientX-start.x)/zoom;item.y=start.top+(e.clientY-start.y)/zoom;card.style.left=`${item.x}px`;card.style.top=`${item.y}px`;
+      const dx=item.x-start.left,dy=item.y-start.top;
+      for(const path of drawing.querySelectorAll<SVGPathElement>('[data-points]')) {
+        const raw=JSON.parse(path.dataset.points!) as {x:number;y:number}[];
+        const points=dragPoints(raw);
+        if(path.dataset.from===item.id){const vertical=points[0].x===points[1].x;points[0].x+=dx;points[0].y+=dy;if(vertical)points[1].x+=dx;else points[1].y+=dy;}
+        if(path.dataset.to===item.id){const vertical=points.at(-1)!.x===points.at(-2)!.x;points.at(-1)!.x+=dx;points.at(-1)!.y+=dy;if(vertical)points.at(-2)!.x+=dx;else points.at(-2)!.y+=dy;}
+        path.setAttribute('d',roundedPath(points));
+        if(path.dataset.relationship){
+          const label=[...drawing.querySelectorAll<HTMLElement>('.business-link-label')].find(label=>label.dataset.relationship===path.dataset.relationship);
+          const index=Number(path.dataset.labelSegment),a=points[index],b=points[index+1];
+          if(label&&a&&b){const t=Number(path.dataset.labelT??.5);label.style.left=`${a.x+(b.x-a.x)*t}px`;label.style.top=`${a.y+(b.y-a.y)*t}px`;}
+        }
+      }
+    };
+    header.onpointerup=e=>{if(!start)return;const moved=Math.hypot(e.clientX-start.x,e.clientY-start.y)>4;start=undefined;if(moved){header.onclick=null;save();draw();}};
+    header.onpointercancel=()=>{start=undefined;save();draw();};
+  }
+  function render() {
+    renderContents();
+    drawer.classList.toggle('metric-properties',!!activeMetric);
+    const header=drawer.querySelector('header');
+    if(header){const caption=header.firstChild;if(caption?.nodeType===Node.TEXT_NODE){const label=el('span',caption.textContent??'','drawer-title');label.prepend(createElement(activeMetric?ChartNoAxesCombined:Shapes,{width:16,height:16,'aria-hidden':'true','stroke-width':1.5}));caption.replaceWith(label);}const close=header.querySelector('button');close?.replaceChildren(createElement(X,{width:16,height:16,'aria-hidden':'true'}));}
+    const labels=[...drawer.querySelectorAll<HTMLLabelElement>(':scope > label')];
+    if(activeMetric&&section==='Definition'){
+      const calculation=el('section','','drawer-field-grid');calculation.append(el('h3','Calculation'));
+      for(const label of labels.slice(2))calculation.append(label);
+      if(labels[1])labels[1].after(calculation);
+    }
+    const attributes=[...drawer.querySelectorAll('h3')].find(h=>h.textContent==='Attributes');
+    if(attributes&&attributes.nextElementSibling?.tagName==='BUTTON'){const add=attributes.nextElementSibling;const heading=el('div','','drawer-section-heading');attributes.before(heading);heading.append(attributes,add);add.replaceChildren(createElement(Plus,{width:14,height:14,'aria-hidden':'true'}),document.createTextNode('Attribute'));}
+    for(const button of drawer.querySelectorAll<HTMLButtonElement>(':scope > button'))if(button.textContent?.startsWith('Delete'))button.classList.add('drawer-delete');
+    for(const area of drawer.querySelectorAll('.business-representation'))for(const select of area.querySelectorAll<HTMLSelectElement>(':scope > select')){const label=el('label',select.getAttribute('aria-label')??'');select.before(label);label.append(select);}
+  }
+  function renderContents() {
+    drawer.classList.toggle('mapping-open',!!active&&!activeMetric&&section==='Mappings');
+    draw();drawer.replaceChildren();if(activeMetric){renderMetric(activeMetric);return;}if(!active)return;
+    const entity=active;
+    const header=el('header','Entity properties');const close=button('×',()=>{active=undefined;drawer.hidden=true;draw();});close.setAttribute('aria-label','Close entity properties');header.append(close);drawer.append(header);
+    const tabs=el('div','','business-tabs');for(const tab of ['Definition','Mappings','Relationships']){const btn=button(tab,()=>{section=tab;render();});btn.setAttribute('aria-pressed',String(section===tab));tabs.append(btn);}drawer.append(tabs);
+    if(section==='Definition') {
+      drawer.append(field('Entity name',entity.name,v=>entity.name=v),field('Definition',entity.definition,v=>entity.definition=v,true),field('Grain',entity.grain,v=>entity.grain=v));
+      const rules=el('details','','drawer-disclosure');rules.open=!!entity.rules;rules.append(el('summary','Business rules'),field('Rules',entity.rules,v=>entity.rules=v,true));drawer.append(rules);
+      drawer.append(el('h3','Attributes'),button('+ Attribute',()=>{entity.attributes.push({id:crypto.randomUUID(),name:'New attribute',definition:'',type:'Text',required:false,identifier:false});save();render();}));
+      const attributeTable=el('table','','business-mapping-table attribute-grid');
+      const ah=attributeTable.createTHead().insertRow();for(const title of ['Attribute','Type','Flags','']){const th=el('th',title);th.scope='col';ah.append(th);}const ab=attributeTable.createTBody();
+      for(const a of entity.attributes){
+        const row=ab.insertRow();const input=el('input');input.value=a.name;input.placeholder='Attribute name...';input.setAttribute('aria-label',`Attribute name ${a.name}`);input.oninput=()=>{a.name=input.value;save();draw();};row.insertCell().append(input);
+        row.insertCell().append(select(`Type of ${a.name}`,a.type,['Text','Number','Boolean','Date'].map(v=>[v,v]),v=>a.type=v as Attribute['type']));
+        const flags=row.insertCell();flags.className='attribute-flags';const required=check('Req',a.required,v=>a.required=v);required.title='Required';required.querySelector('input')!.setAttribute('aria-label','Required');flags.append(check('ID',a.identifier,v=>a.identifier=v),required);
+        const remove=button('×',()=>{entity.attributes=entity.attributes.filter(x=>x!==a);entity.representations.forEach(r=>delete r.bindings[a.id]);save();render();});remove.className='business-remove';remove.setAttribute('aria-label',`Remove ${a.name}`);row.insertCell().append(remove);
+        const detailRow=ab.insertRow();detailRow.className='attribute-definition-row';detailRow.hidden=true;const cell=detailRow.insertCell();cell.colSpan=4;cell.append(field('Attribute definition',a.definition,v=>a.definition=v,true));
+        const edit=button('',()=>{detailRow.hidden=!detailRow.hidden;edit.setAttribute('aria-expanded',String(!detailRow.hidden));});edit.className='attribute-note';edit.setAttribute('aria-label',`Edit definition of ${a.name}`);edit.setAttribute('aria-expanded','false');edit.title=a.definition||'Add definition';edit.append(createElement(Pencil,{width:14,height:14,'aria-hidden':'true'}));remove.before(edit);
+      }
+      drawer.append(attributeTable);
+      drawer.append(button('Delete entity',()=>{if(!confirm(`Delete ${entity.name} and its mappings and relationships?`))return;model.entities=model.entities.filter(e=>e!==entity);model.relationships=model.relationships.filter(r=>r.from!==entity.id&&r.to!==entity.id);active=undefined;drawer.hidden=true;save();render();}));
+    } else if(section==='Mappings') {
+      drawer.append(mappingWorkspace(entity,tables,()=>{save();draw();},(table,column)=>goTrace(table,column)));
+    } else {
+      drawer.append(el('p','Business relationships describe meaning and cardinality. They do not create physical joins.','business-muted'),button('+ Relationship',()=>{const other=model.entities.find(e=>e!==entity);if(!other)return;model.relationships.push({id:crypto.randomUUID(),from:entity.id,to:other.id,name:'relates to',cardinality:'One to many',optional:true});save();render();}));
+      for(const relation of model.relationships.filter(r=>r.from===entity.id||r.to===entity.id)){const area=el('section','','business-representation');area.append(select('From entity',relation.from,model.entities.map(e=>[e.id,e.name]),v=>relation.from=v),field('Relationship name',relation.name,v=>relation.name=v),select('To entity',relation.to,model.entities.map(e=>[e.id,e.name]),v=>relation.to=v),select('Cardinality',relation.cardinality,['One to one','One to many','Many to one','Many to many'].map(v=>[v,v]),v=>relation.cardinality=v),check('Optional relationship',relation.optional,v=>relation.optional=v),button('Remove relationship',()=>{model.relationships=model.relationships.filter(r=>r!==relation);save();render();}));drawer.append(area);}
+    }
+  }
+  let pan:{x:number;y:number;px:number;py:number}|undefined;
+  stage.onpointerdown=e=>{if((e.target as Element).closest('button,input,select,.business-node'))return;pan={x:e.clientX,y:e.clientY,px:panX,py:panY};stage.setPointerCapture(e.pointerId);stage.classList.add('panning');};
+  stage.onpointermove=e=>{if(pan){panX=pan.px+e.clientX-pan.x;panY=pan.py+e.clientY-pan.y;applyView();}};
+  stage.onpointerup=e=>{if(pan&&Math.hypot(e.clientX-pan.x,e.clientY-pan.y)<4){active=undefined;activeMetric=undefined;drawer.hidden=true;draw();}pan=undefined;stage.classList.remove('panning');};
+  stage.onpointercancel=()=>{pan=undefined;stage.classList.remove('panning');};
+  stage.addEventListener('wheel',e=>{if((e.target as Element).closest('.business-controls, .business-view-controls'))return;e.preventDefault();if(e.ctrlKey){const rect=stage.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;const next=Math.max(.25,Math.min(2,zoom*Math.exp(-e.deltaY*.01)));panX=x-(x-panX)*next/zoom;panY=y-(y-panY)*next/zoom;zoom=next;}else{panX-=e.deltaX;panY-=e.deltaY;}applyView();},{passive:false});
+  document.addEventListener('keydown',e=>{if(!root.hidden&&e.key==='Escape'){active=undefined;activeMetric=undefined;drawer.hidden=true;draw();}});
+  let previousWidth=0;
+  new ResizeObserver(()=>{if(root.hidden||restoringView)return;const width=stage.clientWidth;if(previousWidth){panX+=width-previousWidth;const selected=activeMetric??active;if(selected&&!drawer.hidden){panX=Math.min(panX,width-24-(selected.x+270)*zoom);}}previousWidth=width;applyView();}).observe(stage);
+  if(writable){if(freshModel)arrange();save();}
+  registerHistory('business',{read:()=>model,write:value=>{model=value;active=undefined;activeMetric=undefined;drawer.hidden=true;save();render();}});
+}

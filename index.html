@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Semantical — connect your data to its meaning. Explore lineage and define entities, mappings, and metrics." />
+    <meta name="theme-color" content="#0e0e0e" />
+    <title>Semantical</title>
+  </head>
+  <body>
+    <div id="app">
+      <main class="workspace" aria-label="Data lineage canvas">
+        <svg id="canvas" xmlns="http://www.w3.org/2000/svg" aria-label="Table diagram"></svg>
+        <div class="toolbar" role="toolbar" aria-label="Canvas tools">
+          <button id="add-table" type="button" aria-label="Create table" title="Create table">
+            <i data-lucide="table-2"></i>
+            <span>Table</span><i data-lucide="plus" class="plus"></i>
+          </button>
+        </div>
+      </main>
+      <aside class="drawer" aria-label="Table properties" inert>
+        <div class="drawer-content">
+          <header><span>Table properties</span><button id="close-drawer" type="button" aria-label="Close drawer"><i data-lucide="x"></i></button></header>
+          <form id="table-form">
+            <div class="property-field"><label for="table-database">Database</label><div class="autocomplete"><input aria-label="Database" id="table-database" name="database" autocomplete="off" maxlength="80" placeholder="Database..." /></div></div>
+            <div class="property-field"><label for="table-schema">Schema</label><div class="autocomplete"><input aria-label="Schema" id="table-schema" name="schema" autocomplete="off" maxlength="80" placeholder="Schema.." /></div></div>
+            <div class="property-field table-name-field"><label for="table-name">Table name</label><input aria-label="Table name" id="table-name" placeholder="Table name..." name="name" autocomplete="off" maxlength="80" /></div>
+          </form>
+          <section class="columns" aria-label="Columns">
+            <div class="section-heading"><button id="add-column" type="button" aria-label="Add column" title="Add column"><i data-lucide="plus"></i><span>Add column</span></button></div>
+            <div class="column-list-heading" aria-hidden="true"><span></span><span>Column name</span><span>Type</span><span>Keys</span><span>Logic</span><span></span></div>
+            <div id="column-list"></div>
+          </section>
+          <section class="lineage" aria-label="Table lineage">
+            <select id="source-table" aria-label="Add upstream table"></select>
+            <table class="source-table" aria-label="Upstream tables"><thead><tr><th scope="col">Table</th><th scope="col">Database</th><th scope="col">Schema</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead><tbody id="source-list"></tbody></table>
+          </section>
+          <details class="transformation"><summary>Table transformation</summary>
+            <label for="table-logic">Transformation logic</label>
+            <textarea id="table-logic" spellcheck="false" rows="7" placeholder="Describe how this table is built. SQL, pseudocode, or plain language."></textarea>
+          </details>
+        </div>
+      </aside>
+    </div>
+    <script type="module" src="/src/bootstrap.ts"></script>
+  </body>
+</html>

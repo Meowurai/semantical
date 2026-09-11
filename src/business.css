@@ -1,0 +1,294 @@
+.model-switch {position:fixed;top:12px;left:16px;display:flex;gap:4px;z-index:20;background:var(--surface-24);padding:3px;border:0;border-radius:7px}
+.model-switch button,.business-app button {border:0;border-radius:5px;background:var(--surface-32);color:var(--text-170);padding:7px 10px;font-size:12px}
+.model-switch button[aria-pressed=true],.business-app button[aria-pressed=true] {background:var(--surface-48);color:var(--text-252)}
+.model-switch button:hover,.business-app button:hover {background:var(--surface-48);color:var(--text-255)}
+#app[hidden],.business-app[hidden] {display:none}
+#app {padding-top:52px;height:100dvh}
+.business-app {display:flex;height:100dvh;padding-top:52px;background:var(--surface-14)}
+.business-stage {flex:1;min-width:0;position:relative;overflow:hidden;cursor:grab}
+.business-stage.panning {cursor:grabbing}
+.business-drawing {position:absolute;inset:0;transform-origin:0 0}
+.business-links {position:absolute;overflow:visible;width:100%;height:100%;pointer-events:none}
+.business-links path {stroke:var(--line-102);stroke-width:1.5;fill:none}
+.business-node {position:absolute;width:270px;background:var(--surface-24);border:1px solid var(--border-54);border-radius:10px;overflow:hidden;cursor:default}
+.business-node.selected {border-color:var(--border-170)}
+.business-app .business-node-header {width:100%;padding:16px;text-align:left;color:var(--text-238);background:transparent;font-size:14px;cursor:grab}
+.business-coverage {display:block;font-size:10px;color:var(--text-153);padding:0 16px 12px;border-bottom:1px solid var(--border-48)}
+.business-app .business-attribute {display:flex;width:100%;padding:8px 16px;text-align:left;background:transparent;color:var(--text-221);gap:8px}
+.business-attribute small {margin-left:auto;color:var(--text-136);font-size:10px}
+.business-app .business-link-label {position:absolute;transform:translate(-50%,-50%);font-size:10px;background:var(--surface-16);border:1px solid var(--border-41);z-index:1}
+.business-controls {position:absolute;top:16px;left:16px;right:16px;display:flex;gap:5px;align-items:center}
+.business-controls input {width:190px;padding:7px 10px;font-size:12px;margin-right:auto;border:0}
+.business-app .business-add {position:absolute;bottom:28px;left:50%;transform:translateX(-50%);padding:14px 22px;border:0;border-radius:12px}
+.business-drawer {flex:0 0 min(480px,65vw);width:min(480px,65vw);padding:0 24px 28px;background:var(--surface-23);border-left:1px solid var(--border-41);overflow:auto}
+.business-drawer[hidden] {display:none}
+.business-drawer header {position:sticky;top:0;background:var(--surface-23);display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--border-41);z-index:2}
+.business-tabs {display:flex;gap:5px;padding:16px 0 0}
+.business-drawer label {margin:16px 0 8px}
+.business-drawer input,.business-drawer textarea,.business-drawer select {margin-top:6px;width:100%;font-size:12px;padding:9px;box-sizing:border-box}
+.business-drawer textarea {min-height:70px;resize:vertical}
+.business-drawer h3 {font-size:13px;font-weight:500;margin-top:24px}
+.business-muted {font-size:12px;color:var(--text-153);line-height:1.6}
+.business-node .business-muted {padding:0 16px}
+.business-check {display:flex;align-items:center;gap:8px;font-size:12px}
+.business-check input {width:14px;margin:0}
+.business-representation,.business-attribute-editor {border-bottom:1px solid var(--border-48);padding-bottom:20px;margin-bottom:20px}
+.business-representation>button,.business-attribute-editor>button {margin-top:12px}
+.business-mapping-table {width:100%;table-layout:fixed;border-collapse:collapse;margin-top:18px;font-size:12px}
+.business-mapping-table th {color:var(--text-136);font-size:10px;font-weight:400;text-align:left;border-bottom:1px solid var(--border-51);padding:8px 4px}
+.business-mapping-table th:last-child {width:54px}
+.business-mapping-table td {padding:8px 4px;border-bottom:1px solid var(--border-41);overflow-wrap:anywhere;vertical-align:top}
+.business-mapping-table select {margin:0;padding:5px}
+.business-issue {display:block;color:var(--accent-yellow);margin-top:5px;font-size:10px}
+.business-app button:disabled {opacity:.4;cursor:default}
+.business-notice {position:fixed;bottom:0;left:16px;background:color-mix(in srgb, var(--accent-orange) 8%, var(--surface-24));padding:12px;font-size:12px}
+.business-mapping-table th:last-child {width:64px}
+.business-mapping-table button {white-space:nowrap;padding:6px 8px;font-size:11px}
+.business-drawer select {background:var(--surface-32);color:var(--text-221);border:1px solid var(--border-51);border-radius:6px}
+.business-stage {touch-action:none}
+.business-link-label {white-space:nowrap}
+.toolbar {display:flex;align-items:center;white-space:nowrap}
+.business-add {position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;align-items:center;padding:5px;border:1px solid var(--border-51);border-radius:14px;background:var(--surface-27);box-shadow:0 8px 30px #0003;white-space:nowrap}
+.business-add button {padding:11px 14px;background:transparent;font-size:13px}
+.business-drawer {min-width:0;transition:flex-basis 450ms cubic-bezier(.25,.1,.25,1),width 450ms cubic-bezier(.25,.1,.25,1),padding 450ms cubic-bezier(.25,.1,.25,1);overflow-x:hidden}
+.business-drawer[hidden] {display:block;flex-basis:0;width:0;padding-left:0;padding-right:0;border:0;visibility:hidden}
+.business-drawer > * {width: min(432px,calc(65vw - 48px))}
+.business-drawer > button {width:auto}
+.business-drawer header {font-size:14px;font-weight:500}
+.business-tabs {border-bottom:1px solid var(--border-41);margin-bottom:20px;padding-bottom:12px}
+.business-tabs button {background:transparent;font-size:12px}
+.business-drawer input:not(:focus):not(:placeholder-shown),.attribute-grid select:not(:focus) {background:transparent;border-color:transparent}
+.business-drawer input:focus,.business-drawer select:focus {background:var(--surface-32);border-color:var(--border-68)}
+.attribute-grid th:first-child {width:39%}
+.attribute-grid th:nth-child(2) {width:25%}
+.attribute-grid th:last-child {width:24px}
+.attribute-grid input,.attribute-grid select {margin:0;padding:7px 4px}
+.attribute-grid .business-check {margin:3px 0;font-size:10px;gap:4px}
+.attribute-grid .business-check input {width:12px}
+.attribute-grid details {font-size:11px;color:var(--text-136)}
+.attribute-grid summary {cursor:pointer;list-style:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px 5px}
+.attribute-grid td {border-bottom:0}
+.attribute-grid tr:nth-child(even) td {border-bottom:1px solid var(--border-41);padding-top:0}
+.business-remove {opacity:0;transition:opacity 150ms}
+tr:hover .business-remove,.business-remove:focus-visible {opacity:1}
+.business-node,.business-node button {transition:border-color 200ms,background-color 160ms,opacity 450ms}
+.metric-node .business-coverage {color:var(--accent-purple)}
+.business-drawer>section {animation:reveal-editor 400ms ease}
+@media(prefers-reduced-motion:reduce){.business-drawer,.business-node {transition:none}}
+.business-stage {overflow:clip}
+.business-app .business-add {padding:5px;border-radius:14px}
+.business-node-header {min-height:48px}
+.business-app .business-attribute {height:32px;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.business-controls {pointer-events:none}
+.business-controls>* {pointer-events:auto}
+.business-controls input {margin-right:0}
+.business-controls>button:nth-child(3) {margin-left:auto}
+.business-checks-panel {position:absolute;z-index:5;top:56px;left:16px;width:min(420px,calc(100% - 32px));max-height:320px;overflow:auto;padding:8px;background:var(--surface-24);border:1px solid var(--border-54);border-radius:8px;font-size:12px}
+.business-checks-panel button {display:block;text-align:left;background:transparent;width:100%;line-height:1.5}
+.business-checks-panel[hidden] {display:none}
+/* Shared chrome: model tasks above the canvas, navigation at its lower edge. */
+.model-switch {left:auto;right:16px}
+.canvas-navigation,.business-controls {position:fixed;top:16px;left:16px;right:250px;z-index:10}
+.canvas-controls-right,.business-view-controls {position:absolute;right:16px;bottom:28px;display:flex;align-items:center;gap:4px;margin:0;z-index:4;pointer-events:auto}
+.canvas-controls-right button {border:0;background:var(--surface-24);color:var(--text-170);padding:8px;border-radius:5px;font-size:11px}
+.canvas-controls-right button:hover {background:var(--surface-42);color:var(--text-252)}
+.business-view-controls button {background:var(--surface-24);font-size:11px;padding:8px}
+.business-checks-panel {position:fixed;top:56px;left:16px}
+@media(max-width:760px){
+  .canvas-controls-right,.business-view-controls {bottom:92px}
+  .canvas-controls-left,.business-controls {flex-wrap:wrap}
+}
+#app .canvas-navigation {position:fixed;top:16px;left:16px;right:250px;z-index:10}
+.business-add button,.toolbar button {display:flex;align-items:center;gap:9px}
+.business-add button svg,.toolbar button svg {width:16px;height:16px;flex:none}
+.business-app .business-node .business-node-header {color:var(--accent-green)}
+.business-app .metric-node .business-node-header {color:var(--accent-purple)}
+.toolbar button[aria-label="Create table"],.business-add button[aria-label="Create table"] {color:var(--accent-blue)}
+.toolbar button[aria-label="Create entity"],.business-add button[aria-label="Create entity"] {color:var(--accent-green)}
+.toolbar button[aria-label="Create metric"],.business-add button[aria-label="Create metric"] {color:var(--accent-purple)}
+.business-attribute-row {display:flex;align-items:center;padding-right:8px;height:32px}
+.business-attribute-row .business-attribute {min-width:0;flex:1;padding-right:6px}
+.business-app .node-trace {flex:none;padding:4px 6px;font-size:10px;background:transparent;color:var(--text-170);opacity:.6}
+.business-attribute-row:hover .node-trace,.node-trace:focus-visible {opacity:1;background:var(--surface-41)}
+.business-app .node-trace:disabled {opacity:.2}
+.node-trace-menu {position:fixed;z-index:40;width:280px;max-height:172px;overflow:auto;padding:8px;background:var(--surface-32);border:1px solid var(--border-54);border-radius:8px;box-shadow:0 8px 24px #0006}
+.node-trace-menu p {margin:4px 6px 8px;color:var(--text-136);font-size:11px}
+.node-trace-menu button {display:block;width:100%;padding:8px;border:0;border-radius:5px;background:transparent;color:var(--text-221);text-align:left;font-size:12px}
+.node-trace-menu button:hover {background:var(--surface-48)}
+/* Properties occupy the full height; all top controls stay over the canvas. */
+#app,.business-app {padding-top:0}
+#app>.workspace,.business-stage {margin-top:52px}
+body:has(#app:not([hidden]).drawer-open),body:has(.business-app:not([hidden])>.business-drawer:not([hidden])) {--properties-width:min(480px,65vw)}
+.model-switch {right:calc(16px + var(--properties-width,0px));transition:right 450ms cubic-bezier(.25,.1,.25,1)}
+#app .canvas-navigation,.business-controls {right:calc(250px + var(--properties-width,0px));transition:right 450ms cubic-bezier(.25,.1,.25,1)}
+@media(prefers-reduced-motion:reduce){.model-switch,#app .canvas-navigation,.business-controls {transition:none}}
+.business-controls {flex-direction:column;align-items:flex-start;gap:6px}
+.business-checks-panel {top:94px}
+/* Entity cards share the physical cards' header, row rhythm, and quiet actions. */
+.business-node:not(.metric-node) .business-node-header {display:flex;align-items:center;gap:10px;height:48px;min-height:48px;padding:0 17px;border-radius:0;border-bottom:1px solid var(--border-54);font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entity-status {margin-left:auto;flex:none;width:5px;height:5px;border-radius:50%;background:var(--accent-green)}
+.entity-status.incomplete {background:var(--surface-119)}
+.entity-attributes {padding:8px;max-height:252px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:transparent var(--surface-24)}
+.entity-attributes:hover {scrollbar-color:var(--surface-54) var(--surface-24)}
+.entity-attributes .business-attribute-row {padding:0 4px 0 0;border-radius:6px;height:32px;gap:0}
+.entity-attributes .business-attribute-row:hover,.entity-attributes .business-attribute-row:focus-within {background:var(--surface-42)}
+.business-app .entity-attributes .business-attribute {display:grid;grid-template-columns:minmax(0,1fr) 25px 46px;align-items:center;gap:6px;padding:0 4px 0 9px;height:32px;color:var(--text-252);font-size:12px;background:transparent;border-radius:6px;text-align:left}
+.entity-attribute-name {overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entity-attribute-flags {display:flex;justify-content:flex-end;align-items:center}
+.entity-id-badge {font:9px/15px ui-monospace,monospace;color:var(--accent-yellow);border:1px solid color-mix(in srgb, var(--accent-yellow) 20%, var(--border-24));background:color-mix(in srgb, var(--accent-yellow) 6%, var(--surface-24));border-radius:3px;padding:0 3px}
+.entity-required {font-size:12px;color:var(--text-153)}
+.business-app .entity-attributes small {font:10px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--text-153);margin:0;text-align:right}
+.business-app .business-attribute-row .node-trace {display:grid;place-items:center;width:22px;height:24px;padding:3px;opacity:0;border-radius:4px}
+.business-attribute-row:hover .node-trace:not(:disabled),.business-attribute-row:focus-within .node-trace:not(:disabled) {opacity:1}
+@media(hover:none){.business-app .business-attribute-row .node-trace:not(:disabled){opacity:.7}}
+.business-node:hover {border-color:var(--border-102)}
+.business-node.selected,.business-node:focus-visible {border-color:var(--border-170);outline:none}
+.business-app .business-attribute-row:hover .node-trace:not(:disabled),.business-app .business-attribute-row:focus-within .node-trace:not(:disabled) {opacity:1}
+
+/* Metrics emphasize the calculation and its business context. */
+.business-app .metric-node .business-node-header {display:flex;align-items:center;gap:9px;height:48px;padding:0 16px;border-radius:0;border-bottom:1px solid color-mix(in srgb, var(--accent-purple) 18%, var(--border-24));font-size:13px;font-weight:500;background:color-mix(in srgb, var(--accent-purple) 5%, var(--surface-24))}
+.metric-node .business-node-header svg {flex:none}
+.metric-name {overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.metric-status {margin-left:auto;flex:none;width:5px;height:5px;border-radius:50%;background:var(--accent-purple)}
+.metric-status.incomplete {background:var(--surface-119)}
+.metric-body {padding:12px}
+.metric-node .metric-calculation-row {height:34px;padding-right:2px;gap:4px;border-radius:5px}
+.metric-calculation-row:hover,.metric-calculation-row:focus-within {background:color-mix(in srgb, var(--accent-purple) 10%, var(--surface-24))}
+.business-app .metric-calculation {display:flex;align-items:center;gap:9px;flex:1;min-width:0;padding:5px 4px;background:transparent;text-align:left}
+.metric-aggregation {flex:none;padding:3px 5px;border:1px solid color-mix(in srgb, var(--accent-purple) 28%, var(--border-24));border-radius:4px;background:color-mix(in srgb, var(--accent-purple) 10%, var(--surface-24));color:var(--accent-purple);font:10px/14px ui-monospace,monospace;text-transform:uppercase}
+.metric-value {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--text-238)}
+.metric-context {display:grid;grid-template-columns:42px minmax(0,1fr);gap:8px 10px;margin:12px 4px 3px;font-size:11px;line-height:16px}
+.metric-context dt {color:var(--text-136)}
+.metric-context dd {margin:0;color:var(--text-187);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.business-node-header > svg {flex:none}
+.entity-name {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.model-switch .share-menu {position:absolute;top:calc(100% + 8px);right:0;width:290px;padding:16px;background:var(--surface-27);border:1px solid var(--border-54);border-radius:10px;box-shadow:0 12px 40px #0008;color:var(--text-238)}
+.share-menu[hidden] {display:none}
+.share-menu strong {display:block;font-size:13px;margin-bottom:12px}
+.model-switch .share-menu button {display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 8px}
+.share-menu p {font-size:11px;line-height:1.5;color:var(--text-153);margin:12px 0 0}
+.share-menu input {width:100%;margin-top:12px;font-size:11px}
+.readonly-badge {align-self:center;padding:0 8px;color:var(--text-153);font-size:11px}
+.read-only .toolbar,.read-only .business-add {display:none}
+.read-only .drawer button:disabled,.read-only .business-drawer button:disabled {display:none}
+.read-only .drawer:disabled,.read-only .business-drawer :disabled {opacity:1;color:var(--text-187)}
+
+.theme-selector {border-top:1px solid var(--border-54);margin-top:16px;padding-top:16px}
+.theme-options {display:flex;gap:6px}
+.model-switch .theme-options button {justify-content:center;border:1px solid var(--border-54)}
+.model-switch .theme-options button[aria-pressed=true] {background:var(--surface-48);color:var(--text-238)}
+
+.business-drawer.mapping-open:not([hidden]) {width:min(800px,80vw);flex-basis:min(800px,80vw)}
+.business-drawer.mapping-open > * {width:100%}
+body:has(.business-app:not([hidden])>.mapping-open:not([hidden])) {--properties-width:min(800px,80vw)}
+.mapping-top,.mapping-binding-actions {display:flex;gap:8px;align-items:center}
+.mapping-top select {flex:1;min-width:0}
+.mapping-sides {display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.mapping-sides > div {min-width:0}
+.mapping-binding,.mapping-candidate {padding:12px;margin:8px 0;border:1px solid var(--border-51);border-radius:7px}
+.mapping-binding.active {border-color:var(--accent-green);background:color-mix(in srgb, var(--accent-green) 8%, var(--surface-24))}
+.mapping-binding small,.mapping-candidate small {display:block;color:var(--text-153);font-size:11px;margin:5px 0}
+.mapping-binding p {font-size:12px;overflow-wrap:anywhere;margin:8px 0}
+.mapping-candidate strong {font-size:12px;font-weight:500}
+.mapping-suggestion {color:var(--accent-green)!important}
+.mapping-results {max-height:55vh;overflow-y:auto}
+.mapping-workspace details {margin-top:12px;color:var(--text-153);font-size:12px}
+.semantic-usage {margin-top:24px;border-top:1px solid var(--border-51);padding-top:16px}
+.semantic-usage button {display:block;margin-top:8px;width:100%;text-align:left;padding:10px;background:var(--surface-36);color:var(--accent-green);border:0;border-radius:6px;font-size:12px}
+.semantic-usage p {font-size:12px;color:var(--text-153)}
+.history-actions {border-bottom:1px solid var(--border-51);padding-bottom:10px;margin-bottom:14px}
+.history-actions button:disabled {opacity:.35}
+
+.model-switch .share-menu .clear-canvas {color:var(--accent-red)}
+.clear-canvas-confirm {padding:8px;border:1px solid color-mix(in srgb, var(--accent-red) 20%, var(--border-24));border-radius:6px;margin-bottom:12px}
+.clear-canvas-confirm[hidden] {display:none}
+/* Shared property-editor rhythm for entities and metrics. */
+.business-drawer {font-size:12px}
+.business-drawer > header {height:65px;min-height:65px;padding:0;box-sizing:border-box}
+.drawer-title {display:flex;align-items:center;gap:10px;color:var(--text-238)}
+.drawer-title svg {color:var(--accent-green)}
+.metric-properties .drawer-title svg {color:var(--accent-purple)}
+.business-drawer > header button {display:grid;place-items:center;width:28px;height:28px;padding:6px;background:transparent}
+.business-drawer .business-tabs {gap:4px;padding:12px 0;margin:0 0 20px}
+.business-drawer .business-tabs button {padding:7px 10px}
+.business-drawer label {display:flex;flex-direction:column;gap:6px;margin:0 0 16px;color:var(--text-153);font-size:11px;line-height:1.4}
+.business-drawer input,.business-drawer select,.business-drawer textarea {margin:0;font-size:13px;padding:8px 9px;border-radius:6px;min-width:0;color:var(--text-238)}
+.business-drawer input,.business-drawer select {height:34px}
+.business-drawer textarea {min-height:62px;line-height:1.5;background:var(--surface-32);border:1px solid var(--border-48)}
+.business-drawer input:not(:focus):not(:placeholder-shown) {padding-left:0}
+.business-drawer .business-check {flex-direction:row;align-items:center;gap:6px;margin:0;font-size:11px}
+.business-drawer .business-check input {flex:none;width:13px;height:13px;padding:0;margin:0;accent-color:var(--accent-green)}
+.drawer-disclosure {border-top:1px solid var(--border-48);margin:16px 0;padding:12px 0}
+.drawer-disclosure summary {cursor:pointer;color:var(--text-170);font-size:12px;list-style-position:inside}
+.drawer-disclosure[open] summary {margin-bottom:14px}
+.drawer-disclosure label:last-child {margin-bottom:0}
+.drawer-section-heading {display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border-48);padding-top:20px;margin-top:20px}
+.business-drawer .drawer-section-heading h3 {margin:0;font-size:12px;color:var(--text-221)}
+.business-drawer .drawer-section-heading button {display:flex;align-items:center;gap:6px;background:transparent;padding:5px 0;font-size:12px}
+.business-drawer .attribute-grid {margin-top:12px}
+.business-drawer .attribute-grid th {padding:8px 4px;font-size:10px}
+.business-drawer .attribute-grid th:first-child {width:35%}
+.business-drawer .attribute-grid th:nth-child(2) {width:23%}
+.business-drawer .attribute-grid th:last-child {width:42px}
+.business-drawer .attribute-grid td {padding:6px 4px;border-bottom:1px solid var(--border-41);vertical-align:middle}
+.business-drawer .attribute-grid input,.business-drawer .attribute-grid select {font-size:12px;height:30px;padding:4px 0}
+.business-drawer .attribute-grid .business-check {font-size:10px;margin:3px 0;gap:4px}
+.business-drawer .attribute-grid .business-check input {width:12px;height:12px}
+.business-drawer .attribute-grid button {padding:3px;background:transparent;display:inline-grid;place-items:center;width:20px;height:24px}
+.attribute-note,.business-drawer .attribute-grid .business-remove {opacity:0}
+.attribute-grid tr:hover .attribute-note,.attribute-grid tr:focus-within .attribute-note,.business-drawer .attribute-grid tr:hover .business-remove,.business-drawer .attribute-grid tr:focus-within .business-remove {opacity:1}
+.attribute-definition-row[hidden] {display:none}
+.business-drawer .attribute-definition-row td {padding:12px;background:var(--surface-28)}
+.business-drawer .attribute-definition-row label {margin:0}
+.drawer-field-grid {display:grid;grid-template-columns:1fr 1fr;gap:0 14px;border-top:1px solid var(--border-48);padding-top:18px;margin-top:20px}
+.business-drawer .drawer-field-grid h3 {grid-column:1/-1;margin:0 0 14px;font-size:12px}
+.dimension-options {display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.business-drawer .drawer-delete {display:block;margin-top:28px;padding:8px 0;background:transparent;color:var(--accent-red);font-size:11px}
+.business-drawer .business-representation {padding:16px 0;margin:0;border-bottom:1px solid var(--border-48)}
+.mapping-binding {padding:10px;margin:0;border:0;border-bottom:1px solid var(--border-48);border-radius:0;display:grid;grid-template-columns:1fr auto;gap:3px 8px}
+.mapping-binding > button {text-align:left;padding:3px 0;background:transparent}
+.mapping-binding p {grid-column:1/-1;margin:3px 0;font-size:11px}
+.mapping-binding small {font-size:10px;margin:3px 0}
+.mapping-binding-actions {grid-column:1/-1}
+.mapping-binding-actions button {font-size:10px;padding:4px 0;background:transparent;margin-right:10px}
+.mapping-binding.active {box-shadow:inset 2px 0 var(--accent-green);padding-left:10px;background:color-mix(in srgb, var(--accent-green) 8%, var(--surface-24))}
+.mapping-candidate {padding:10px 0;margin:0;border:0;border-bottom:1px solid var(--border-48);border-radius:0;display:grid;grid-template-columns:1fr auto;gap:3px 8px}
+.mapping-candidate button {grid-column:2;grid-row:1/3;align-self:center}
+.mapping-candidate .business-issue,.mapping-candidate .mapping-suggestion {grid-column:1/-1}
+.business-drawer .mapping-columns > input {margin-top:8px}
+@media(hover:none){.attribute-note,.business-drawer .attribute-grid .business-remove {opacity:.7}}
+
+.business-drawer .attribute-grid .attribute-flags {white-space:nowrap}
+.business-drawer .attribute-grid .attribute-flags .business-check {display:inline-flex;margin:0 5px 0 0;font-size:9px;gap:3px}
+.business-drawer .attribute-grid th:first-child {width:32%}
+.business-drawer .attribute-grid th:nth-child(2) {width:22%}
+
+/* A consistent dark surface for every panel and its sticky header. */
+:root[data-theme="dark"] :is(
+  .drawer, .drawer header, .business-drawer, .business-drawer header,
+  .toolbar, .business-add, .model-switch, .model-switch .share-menu,
+  .node-context-menu, .node-trace-menu, .suggestions, #trace-tooltip,
+  .business-checks-panel, .business-link-label
+) {background:rgb(24, 24, 24)}
+
+/* Compact model actions, with secondary explanations disclosed on demand. */
+.model-switch .share-menu {width:264px;padding:8px;border-radius:9px;max-height:calc(100dvh - 76px);overflow-y:auto}
+.model-switch .share-menu button {min-height:32px;padding:7px 8px;gap:9px;background:transparent}
+.model-switch .share-menu button:hover:not(:disabled) {background:var(--surface-41)}
+.share-menu kbd {margin-left:auto;color:var(--text-119);font:11px ui-sans-serif,system-ui}
+.share-menu .history-actions {padding-bottom:5px;margin-bottom:5px}
+.share-heading {display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border-51);margin-top:5px;padding:5px 8px 2px}
+.share-menu strong {font-size:11px;font-weight:500;color:var(--text-153);margin:0}
+.model-switch .share-menu .share-info {width:24px;min-height:24px;padding:5px;justify-content:center}
+.share-help {padding:0 8px 6px}
+.share-menu p {margin:6px 0;font-size:11px}
+.share-menu [hidden],.share-menu [role="status"]:empty {display:none}
+.share-menu [role="status"] {padding:0 8px}
+.share-menu .theme-selector {margin-top:6px;padding:8px 4px 2px}
+.share-menu .theme-selector strong {margin:0 4px 6px}
+.share-menu .theme-options {gap:3px}
+.model-switch .share-menu .theme-options button {justify-content:center;padding:6px;gap:6px;border:0}
+.model-switch .share-menu .theme-options button[aria-pressed=true] {background:var(--surface-48);color:var(--text-238)}
+.model-file-actions {border-top:1px solid var(--border-51);margin-top:5px;padding-top:5px}

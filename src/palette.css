@@ -1,0 +1,130 @@
+/* Reference swatches converted from the supplied image profile to sRGB. */
+:root {
+  --accent-white: #ebebeb;
+  --accent-red: #ff6764;
+  --accent-orange: #ff8649;
+  --accent-yellow: #ffd241;
+  --accent-green: #41c977;
+  --accent-blue: #339cff;
+  --accent-purple: #ae7bf9;
+  --accent-pink: #ff8cc1;
+}
+
+/* Shared neutral tokens keep canvas, HTML and SVG surfaces in sync. */
+:root {
+  --theme-scheme: dark;
+  --border-102: #666666;
+  --border-136: #888888;
+  --border-153: #999999;
+  --border-170: #aaaaaa;
+  --border-24: #181818;
+  --border-38: #262626;
+  --border-41: #292929;
+  --border-43: #2b2b2b;
+  --border-48: #303030;
+  --border-51: #333333;
+  --border-54: #363636;
+  --border-56: #383838;
+  --border-59: #3b3b3b;
+  --border-68: #444444;
+  --border-85: #555555;
+  --line-102: #666666;
+  --line-170: #aaaaaa;
+  --line-54: #363636;
+  --surface-119: #777777;
+  --surface-14: #0e0e0e;
+  --surface-16: #101010;
+  --surface-170: #aaaaaa;
+  --surface-23: #171717;
+  --surface-24: #181818;
+  --surface-27: #1b1b1b;
+  --surface-28: #1c1c1c;
+  --surface-32: #202020;
+  --surface-36: #242424;
+  --surface-37: #252525;
+  --surface-38: #262626;
+  --surface-41: #292929;
+  --surface-42: #2a2a2a;
+  --surface-48: #303030;
+  --surface-53: #353535;
+  --surface-54: #363636;
+  --surface-56: #383838;
+  --text-103: #676767;
+  --text-119: #777777;
+  --text-136: #888888;
+  --text-144: #909090;
+  --text-153: #999999;
+  --text-163: #a3a3a3;
+  --text-170: #aaaaaa;
+  --text-187: #bbbbbb;
+  --text-204: #cccccc;
+  --text-213: #d5d5d5;
+  --text-221: #dddddd;
+  --text-238: #eeeeee;
+  --text-252: #fcfcfc;
+  --text-255: #ffffff;
+}
+:root[data-theme="light"] {
+  --theme-scheme: light;
+  --border-102: #a3a3a3;
+  --border-136: #a3a3a3;
+  --border-153: #a3a3a3;
+  --border-170: #a3a3a3;
+  --border-24: #efefef;
+  --border-38: #efefef;
+  --border-41: #efefef;
+  --border-43: #efefef;
+  --border-48: #efefef;
+  --border-51: #efefef;
+  --border-54: #efefef;
+  --border-56: #efefef;
+  --border-59: #efefef;
+  --border-68: #efefef;
+  --border-85: #a3a3a3;
+  --line-102: #a3a3a3;
+  --line-170: #a3a3a3;
+  --line-54: #efefef;
+  --surface-119: #eeeeee;
+  --surface-14: #f2f2f2;
+  --surface-16: #fefefe;
+  --surface-170: #eeeeee;
+  --surface-23: #ffffff;
+  --surface-24: #ffffff;
+  --surface-27: #ffffff;
+  --surface-28: #f5f5f5;
+  --surface-32: #f5f5f5;
+  --surface-36: #f5f5f5;
+  --surface-37: #f5f5f5;
+  --surface-38: #f5f5f5;
+  --surface-41: #eeeeee;
+  --surface-42: #eeeeee;
+  --surface-48: #eeeeee;
+  --surface-53: #eeeeee;
+  --surface-54: #eeeeee;
+  --surface-56: #eeeeee;
+  --text-103: #777a7e;
+  --text-119: #777a7e;
+  --text-136: #777a7e;
+  --text-144: #65686c;
+  --text-153: #65686c;
+  --text-163: #65686c;
+  --text-170: #65686c;
+  --text-187: #65686c;
+  --text-204: #1a1c1f;
+  --text-213: #1a1c1f;
+  --text-221: #1a1c1f;
+  --text-238: #1a1c1f;
+  --text-252: #1a1c1f;
+  --text-255: #1a1c1f;
+  --accent-white: #1a1c1f;
+  --accent-red: #fa423e;
+  --accent-orange: #fc6a23;
+  --accent-yellow: #ffc400;
+  --accent-green: #06b84c;
+  --accent-blue: #0285ff;
+  --accent-purple: #9250f8;
+  --accent-pink: #ff66ad;
+}
+
+:root {--line-96:#606060}
+:root[data-theme="light"] {--line-96:#a3a3a3}
