@@ -292,3 +292,9 @@ body:has(.business-app:not([hidden])>.mapping-open:not([hidden])) {--properties-
 .model-switch .share-menu .theme-options button {justify-content:center;padding:6px;gap:6px;border:0}
 .model-switch .share-menu .theme-options button[aria-pressed=true] {background:var(--surface-48);color:var(--text-238)}
 .model-file-actions {border-top:1px solid var(--border-51);margin-top:5px;padding-top:5px}
+
+/* Both canvases use identical creation controls. */
+.toolbar,.business-app .business-add {display:flex;align-items:center;gap:0;padding:5px;border:0;border-radius:14px;height:48px}
+.toolbar button,.business-app .business-add button {display:flex;align-items:center;gap:9px;padding:10px 14px;height:38px;font-size:13px;line-height:18px;font-weight:400;border:0;border-radius:9px;background:transparent;white-space:nowrap}
+.toolbar button:hover,.business-app .business-add button:hover {background:var(--surface-41)}
+.toolbar,.business-app .business-add {width:282px;justify-content:center}

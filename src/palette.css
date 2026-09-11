@@ -130,4 +130,4 @@
 :root[data-theme="light"] {--line-96:#a3a3a3}
 
 /* Object identity is separate from mapping and validation status. */
-:root {--color-table:var(--accent-blue);--color-entity:var(--accent-purple);--color-metric:var(--accent-orange)}
+:root {--color-table:var(--accent-white);--color-entity:var(--accent-purple);--color-metric:var(--accent-orange)}
