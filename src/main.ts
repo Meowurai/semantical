@@ -1203,4 +1203,3 @@ document.addEventListener('navigate-lineage-table',event=>navigateToTable((event
 document.addEventListener('fit-lineage',fitCanvas);
 document.addEventListener('arrange-lineage',()=>{if(isReadOnly())return;beginHistory();stopNavigation();columnFilter=null;layoutTables(nodes);fitCanvas();commitHistory();});
 
-document.addEventListener('merge-fabric-lineage',event=>{if(isReadOnly())return;const data=(event as CustomEvent<TableNode[]>).detail;stopNavigation();nodes.splice(0,nodes.length,...data);columnScroll.clear();columnFilter=null;select(null);render();saveCanvas();});
