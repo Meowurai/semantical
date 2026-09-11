@@ -13,6 +13,8 @@ Open the menu and choose **Load demo** for a fictional Northstar wholesale model
 - **Lineage:** define tables, columns, keys, transformations, and upstream mappings. Select a column to trace its sources or downstream impact.
 - **Semantics:** define entities, attributes, relationships, and metrics, then map them to physical tables and columns.
 - **Checks:** find incomplete definitions, broken mappings, and incompatible types.
+- Switch between Lineage and Semantics in the bottom toolbar. Each view shows its own creation tools.
+- **Lineage links** lists, adds, edits, and removes table-level upstream links; duplicates and cycles are rejected. **Relationships** does the same for semantic entities, including names, cardinality, and optionality.
 - Drag nodes, search, zoom, fit, or arrange the canvas. Right-click nodes for additional actions.
 - Choose System, Light, or Dark in the menu.
 

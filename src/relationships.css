@@ -1,0 +1,28 @@
+.relationships-dialog {width:min(620px,calc(100vw - 32px));max-height:80dvh;padding:0;border:1px solid var(--border-41);border-radius:12px;background:var(--surface-24);color:var(--text-252);box-shadow:0 20px 60px #0003}
+.relationships-dialog::backdrop {background:#0005}
+.relationships-dialog header {display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border-41)}
+.relationships-dialog h2 {display:flex;align-items:center;gap:9px;margin:0;font-size:14px;font-weight:500}
+.relationships-dialog button {display:flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:5px;padding:7px 9px;background:var(--surface-32);color:var(--text-221);font-size:12px}
+.relationships-dialog button:hover {background:var(--surface-48)}
+.relationship-controls {display:flex;gap:8px;padding:14px 20px 8px}
+.relationship-controls input {min-width:0;flex:1;padding:7px 9px;font-size:12px}
+.relationship-controls button {white-space:nowrap}
+.relationship-list {padding:0 20px 16px}
+.relationship-count,.relationship-item p {font-size:11px;color:var(--text-153);margin:6px 0}
+.relationship-item {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-41)}
+.relationship-item>div:first-child {min-width:0}
+.relationship-endpoints {font-size:12px;overflow-wrap:anywhere}
+.relationship-actions {display:flex;gap:4px;flex:none}
+.relationship-actions button {background:transparent;color:var(--text-153)}
+.relationship-empty {padding:24px 0;color:var(--text-153);font-size:12px}
+.relationship-editor {margin:8px 20px 16px;padding:14px;border:1px solid var(--border-41);border-radius:8px}
+.relationship-editor[hidden] {display:none}
+.relationship-editor form {display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.relationship-editor strong,.relationship-error,.relationship-form-actions {grid-column:1/-1}
+.relationship-editor strong {font-size:12px;font-weight:500}
+.relationship-editor label {margin:0;font-size:11px;min-width:0}
+.relationship-editor input,.relationship-editor select {width:100%;margin-top:6px;padding:7px;font-size:12px;min-width:0}
+.relationship-editor input[type=checkbox] {width:14px;height:14px}
+.relationship-error {color:var(--accent-red);font-size:12px;margin:0}
+.relationship-error:empty {display:none}
+.relationship-form-actions {display:flex;justify-content:flex-end;gap:6px}

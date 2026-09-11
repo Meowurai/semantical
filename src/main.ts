@@ -1194,3 +1194,5 @@ if(!isReadOnly())installHistory();
 document.addEventListener('clear-lineage',()=>{if(isReadOnly())return;beginHistory();stopNavigation();nodes.splice(0);columnScroll.clear();select(null);saveCanvas();commitHistory();});
 
 document.addEventListener('import-lineage',event=>{if(isReadOnly())return;const data=(event as CustomEvent<ReturnType<typeof decodeSnapshot>>).detail;stopNavigation();nodes.splice(0,nodes.length,...data.nodes);columnScroll.clear();columnFilter=null;select(null);if(canvas.clientWidth>0)fitCanvas();else{zoom=data.zoom??1;render();}saveCanvas();});
+
+document.addEventListener('lineage-relationships-changed',()=>{render();saveCanvas();if(selected){const node=nodes.find(n=>n.id===selected);if(node)renderLineage(node);}});

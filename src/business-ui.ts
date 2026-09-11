@@ -1,9 +1,10 @@
+import {relationshipManager} from './relationships-ui';
 import {placeLabel} from './label-layout';
 import {mappingWorkspace} from './mapping-workspace';
 import {registerHistory,beginHistory,commitHistory} from './history';
 import {shared,isReadOnly,installShareMenu} from './sharing';
 import {nodeMenu} from './node-menu';
-import {createElement,Table2,Shapes,ChartNoAxesCombined,ArrowUpRight,Pencil,X,Plus} from 'lucide';
+import {createElement,Table2,Shapes,ChartNoAxesCombined,ArrowUpRight,Pencil,X,Plus,GitBranch,Network} from 'lucide';
 import {arrangeSemantic} from './semantic-layout';
 import {routeAssociations,roundedPath} from './routing';
 import {coverage,decodeBusiness,seedBusiness,metricIssues,type Metric,type BusinessModel,type Entity,type Attribute} from './business-model';
@@ -17,7 +18,7 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
   const stage=el('main','','business-stage');stage.setAttribute('aria-label','Business entity canvas');
   const drawing=el('div','','business-drawing');stage.append(drawing);
   const drawer=el('aside','','business-drawer');drawer.hidden=true;root.append(stage,drawer);
-  const nav=el('nav','','model-switch');nav.setAttribute('aria-label','Model views');document.body.append(nav);
+  const nav=el('nav','','model-switch');nav.setAttribute('aria-label','Model menu');document.body.append(nav);
   let activeMetric:Metric|undefined;let active:Entity|undefined;let section='Definition';let zoom=1,panX=0,panY=0;let writable=true;let firstView=true;let freshModel=false;
   let model:BusinessModel={version:1,entities:[],relationships:[],metrics:[]};
   const notice=el('p','','business-notice');root.append(notice);notice.hidden=true;
@@ -27,7 +28,7 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
   }}
   catch {writable=false;notice.textContent='Saved business model could not be loaded. Saving is paused to protect it.';notice.hidden=false;}
   const save=()=>{if(isReadOnly()||!writable)return;try{localStorage.setItem(key,JSON.stringify(model));notice.hidden=true;}catch{notice.textContent='Business changes could not be saved locally. Keep this tab open.';notice.hidden=false;}};
-  const switchView=(business:boolean)=>{physical.hidden=business;root.hidden=!business;p.setAttribute('aria-pressed',String(!business));b.setAttribute('aria-pressed',String(business));if(business){render();if(firstView){firstView=false;requestAnimationFrame(fit);}}};
+  const switchView=(business:boolean)=>{updateToolbar(business);physical.hidden=business;root.hidden=!business;p.setAttribute('aria-pressed',String(!business));b.setAttribute('aria-pressed',String(business));if(business){render();if(firstView){firstView=false;requestAnimationFrame(fit);}}};
   const p=button('Lineage',()=>switchView(false)),b=button('Semantics',()=>switchView(true));nav.append(p,b);p.setAttribute('aria-pressed','true');b.setAttribute('aria-pressed','false');installShareMenu(nav,physicalSnapshot,()=>model,()=>root.hidden?{
     name:'Lineage',description:'Remove all tables and lineage connections. Semantic bindings will be reported as missing.',run:()=>document.dispatchEvent(new Event('clear-lineage'))
   }:{name:'Semantics',description:'Remove all entities, metrics, relationships and semantic mappings. Physical tables remain.',run:()=>{beginHistory();model={version:1,entities:[],relationships:[],metrics:[]};active=undefined;activeMetric=undefined;drawer.hidden=true;save();render();commitHistory();}},data=>{beginHistory();document.dispatchEvent(new CustomEvent('import-lineage',{detail:data.lineage}));model=data.semantics;active=undefined;activeMetric=undefined;drawer.hidden=true;search.value='';save();render();fit();commitHistory();});
@@ -58,21 +59,22 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
     const entity:Entity={id:crypto.randomUUID(),name:'New entity',definition:'',grain:'',rules:'',x:(stage.clientWidth/2-panX)/zoom-135,y:(stage.clientHeight/2-panY)/zoom,attributes:[],representations:[]};
     model.entities.push(entity);open(entity);save();
   };
-  const entityButton=button('+ Entity',createEntity);entityButton.setAttribute('aria-label','Create entity');
-  physical.querySelector('.toolbar')!.append(entityButton);
-  const addMenu=el('div','','business-add');addMenu.setAttribute('role','toolbar');addMenu.setAttribute('aria-label','Create objects');
-  const addTable=button('+ Table',()=>{switchView(false);physical.querySelector<HTMLButtonElement>('#add-table')!.click();});addTable.setAttribute('aria-label','Create table');
-  const addEntity=button('+ Entity',createEntity);addEntity.setAttribute('aria-label','Create entity');
-  const metricButton=button('+ Metric',createMetric);metricButton.setAttribute('aria-label','Create metric');
-  physical.querySelector('.toolbar')!.append(metricButton);
-  const addMetric=button('+ Metric',createMetric);addMetric.setAttribute('aria-label','Create metric');
-  addMenu.append(addTable,addEntity,addMetric);stage.append(addMenu);
-  for(const menu of [physical.querySelector('.toolbar')!,addMenu]) {
-    for(const [label,icon] of [['Table',Table2],['Entity',Shapes],['Metric',ChartNoAxesCombined]] as const) {
-      const action=menu.querySelector<HTMLButtonElement>(`[aria-label="Create ${label.toLowerCase()}"]`)!;
-      action.replaceChildren(createElement(icon,{'aria-hidden':'true',width:16,height:16,'stroke-width':1.5}),el('span',label));
-    }
+  const toolbar=physical.querySelector<HTMLElement>('.toolbar')!;
+  toolbar.classList.add('workspace-toolbar');toolbar.setAttribute('aria-label','Model tools');document.body.append(toolbar);
+  const chooser=el('div','','toolbar-view-switch');chooser.setAttribute('role','group');chooser.setAttribute('aria-label','Model views');chooser.append(p,b);toolbar.prepend(chooser);
+  const tools=el('div','','toolbar-create-tools');toolbar.append(tools);
+  const tableButton=toolbar.querySelector<HTMLButtonElement>('#add-table')!;tools.append(tableButton);
+  const entityButton=button('Entity',createEntity);entityButton.setAttribute('aria-label','Create entity');
+  const metricButton=button('Metric',createMetric);metricButton.setAttribute('aria-label','Create metric');tools.append(entityButton,metricButton);
+  for(const [action,label,icon] of [[tableButton,'Table',Table2],[entityButton,'Entity',Shapes],[metricButton,'Metric',ChartNoAxesCombined]] as const){action.replaceChildren(createElement(icon,{'aria-hidden':'true',width:16,height:16,'stroke-width':1.5}),el('span',label));}
+  const relations=relationshipManager(tables,()=>model,()=>{document.dispatchEvent(new Event('lineage-relationships-changed'));save();render();},isReadOnly);
+  const relationsButton=button('Relationships',()=>relations.open(root.hidden?'lineage':'semantics'));toolbar.append(relationsButton);
+  function updateToolbar(semantic:boolean){
+    tableButton.hidden=semantic;entityButton.hidden=!semantic;metricButton.hidden=!semantic;
+    relationsButton.replaceChildren(createElement(semantic?Network:GitBranch,{width:16,height:16,'aria-hidden':'true'}),el('span',semantic?'Relationships':'Lineage links'));
+    relationsButton.setAttribute('aria-label',semantic?'Manage entity relationships':'Manage lineage relationships');
   }
+  updateToolbar(false);
   const field=(label:string,value:string,change:(value:string)=>void,multiline=false)=>{const wrapper=el('label',label);const input=multiline?el('textarea'):el('input');input.value=value;if(input instanceof HTMLTextAreaElement)input.rows=2;input.setAttribute('aria-label',label);input.oninput=()=>{change(input.value);save();draw();};wrapper.append(input);return wrapper;};
   const select=(label:string,value:string,options:[string,string][],change:(value:string)=>void)=>{const input=el('select');input.setAttribute('aria-label',label);options.forEach(([v,t])=>input.add(new Option(t,v)));input.value=value;input.onchange=()=>{change(input.value);save();render();};return input;};
   const check=(label:string,value:boolean,change:(value:boolean)=>void)=>{const l=el('label',label,'business-check');const i=el('input');i.type='checkbox';i.checked=value;i.onchange=()=>{change(i.checked);save();draw();};l.prepend(i);return l;};
