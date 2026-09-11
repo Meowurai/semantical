@@ -9,7 +9,7 @@ import { routeEdges, roundedPath, lineCrossings, type Point, type RoutedEdge } f
 import { companyExample, upgradeCompanyExample } from './company-example';
 import { downstreamColumns, validateModel, layoutTables } from './model-tools';
 import './style.css';
-import { createElement, createIcons, Table2, Plus, X, Trash2, GripVertical, Pencil } from 'lucide';
+import { createElement, createIcons, Table2, Plus, X, Trash2, GripVertical, Pencil, CircleCheck } from 'lucide';
 import { DATA_TYPES, type Column, type TableNode, formatType } from './types';
 import { STORAGE_KEY, decodeSnapshot, encodeSnapshot } from './persistence';
 import { canAddSource, columnRefKey, columnInputs, upstreamColumns } from './lineage';
@@ -143,7 +143,7 @@ let viewportWidth = sceneWidth();
 let pan: { pointerId: number; startX: number; startY: number; lastX: number; lastY: number; moved: boolean } | null = null;
 const dragRoutes = new Map<string, {points: {x:number;y:number}[]; source:{x:number;y:number}; target:{x:number;y:number}}>();
 let drag: { node: TableNode; startX: number; startY: number; x: number; y: number; moved: boolean } | null = null;
-const icons = () => createIcons({ icons: { Table2, Plus, X, Trash2, GripVertical, Pencil }, attrs: { width: '16', height: '16', 'stroke-width': '1.5', 'aria-hidden': 'true' } });
+const icons = () => createIcons({ icons: { Table2, Plus, X, Trash2, GripVertical, Pencil, CircleCheck }, attrs: { width: '16', height: '16', 'stroke-width': '1.5', 'aria-hidden': 'true' } });
 icons();
 
 function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string>): SVGElementTagNameMap[K] {
@@ -1080,7 +1080,7 @@ function fitCanvas() {
 function refreshValidation() {
   const list = document.querySelector('#validation-list'), button = document.querySelector('#validation-button');
   if (!list || !button) return;
-  const issues = validateModel(nodes); button.textContent = `Checks · ${issues.length}`;
+  const issues = validateModel(nodes); button.replaceChildren(createElement(CircleCheck,{width:16,height:16,'aria-hidden':'true'}),document.createTextNode(`Checks · ${issues.length}`));
   list.replaceChildren();
   if (!issues.length) list.textContent = 'No definition issues found.';
   for (const issue of issues) {

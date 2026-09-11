@@ -8,7 +8,7 @@ import {mappingWorkspace} from './mapping-workspace';
 import {registerHistory,beginHistory,commitHistory,undo,redo,historyState} from './history';
 import {shared,isReadOnly,installShareMenu} from './sharing';
 import {nodeMenu} from './node-menu';
-import {createElement,Table2,Shapes,ChartNoAxesCombined,ArrowUpRight,Pencil,X,Plus,GitBranch,Network} from 'lucide';
+import {createElement,Table2,Shapes,ChartNoAxesCombined,ArrowUpRight,Pencil,X,Plus,GitBranch,Network,CircleCheck} from 'lucide';
 import {arrangeSemantic} from './semantic-layout';
 import {routeAssociations,roundedPath} from './routing';
 import {coverage,decodeBusiness,seedBusiness,metricIssues,type Metric,type BusinessModel,type Entity,type Attribute} from './business-model';
@@ -45,7 +45,7 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
     checksPanel.replaceChildren();let count=0;
     for(const entity of model.entities){const issues=[...(!entity.name.trim()?['Entity name is required']:[]),...(!entity.grain.trim()?['Grain is undefined']:[]),...(coverage(entity,tables)!=='Mapped'?['Physical mapping is incomplete']:[])];for(const issue of issues){count++;checksPanel.append(button(`${entity.name} — ${issue}`,()=>{checksPanel.hidden=true;section=issue.includes('mapping')?'Mappings':'Definition';open(entity);}));}}
     for(const metric of model.metrics)for(const issue of metricIssues(metric,model,tables)){count++;checksPanel.append(button(`${metric.name} — ${issue}`,()=>{checksPanel.hidden=true;active=undefined;activeMetric=metric;section='Implementation';drawer.hidden=false;render();}));}
-    checksButton.textContent=`Checks · ${count}`;if(!count)checksPanel.append(el('p','No definition issues found.'));
+    checksButton.replaceChildren(createElement(CircleCheck,{width:16,height:16,'aria-hidden':'true'}),el('span',`Checks · ${count}`));if(!count)checksPanel.append(el('p','No definition issues found.'));
   }
   const applyView=()=>{drawing.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;zoomLabel.textContent=`${Math.round(zoom*100)}%`;};
   const zoomLabel=button('100%',()=>{zoom=1;applyView();});zoomLabel.setAttribute('aria-label','Reset business zoom');
@@ -73,15 +73,26 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
   for(const [action,label,icon] of [[tableButton,'Add table',Table2],[entityButton,'Add entity',Shapes],[metricButton,'Add metric',ChartNoAxesCombined]] as const){action.replaceChildren(createElement(icon,{'aria-hidden':'true',width:16,height:16,'stroke-width':1.5}),el('span',label));}
   const relations=relationshipManager(tables,()=>model,()=>{document.dispatchEvent(new Event('lineage-relationships-changed'));save();render();},isReadOnly);
   const relationsButton=button('Relationships',()=>relations.open(root.hidden?'lineage':'semantics'));toolbar.append(relationsButton);
+  const physicalChecks=document.querySelector<HTMLButtonElement>('#validation-button')!;
+  const physicalChecksPanel=document.querySelector<HTMLElement>('#validation-list')!;
+  toolbar.append(physicalChecks,checksButton);
+  for(const panel of [physicalChecksPanel,checksPanel]){panel.classList.add('toolbar-checks-panel');document.body.append(panel);}
+  document.addEventListener('pointerdown',event=>{const target=event.target as Node;for(const [button,panel] of [[physicalChecks,physicalChecksPanel],[checksButton,checksPanel]] as const){if(!button.contains(target)&&!panel.contains(target))panel.hidden=true;}});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'){physicalChecksPanel.hidden=true;checksPanel.hidden=true;}});
   function updateToolbar(semantic:boolean){
+    physicalChecks.hidden=semantic;checksButton.hidden=!semantic;physicalChecksPanel.hidden=true;checksPanel.hidden=true;
     tableButton.hidden=semantic;entityButton.hidden=!semantic;metricButton.hidden=!semantic;
     relationsButton.replaceChildren(createElement(semantic?Network:GitBranch,{width:16,height:16,'aria-hidden':'true'}),el('span','Relationships'));
     relationsButton.setAttribute('aria-label',semantic?'Manage entity relationships':'Manage lineage relationships');
+    resizeToolbar();
+  }
+  function resizeToolbar(){
     const visible=[...toolbar.children].filter(child=>getComputedStyle(child).display!=='none');
     const style=getComputedStyle(toolbar);
     const contentWidth=visible.reduce((sum,child)=>sum+child.getBoundingClientRect().width,0);
     toolbar.style.width=`${Math.ceil(contentWidth+parseFloat(style.paddingLeft)+parseFloat(style.paddingRight)+Math.max(0,visible.length-1)*parseFloat(style.gap))}px`;
   }
+  new MutationObserver(resizeToolbar).observe(toolbar,{childList:true,subtree:true});
   updateToolbar(false);
   const field=(label:string,value:string,change:(value:string)=>void,multiline=false)=>{const wrapper=el('label',label);const input=multiline?el('textarea'):el('input');input.value=value;if(input instanceof HTMLTextAreaElement)input.rows=2;input.setAttribute('aria-label',label);input.oninput=()=>{change(input.value);save();draw();};wrapper.append(input);return wrapper;};
   const select=(label:string,value:string,options:[string,string][],change:(value:string)=>void)=>{const input=el('select');input.setAttribute('aria-label',label);options.forEach(([v,t])=>input.add(new Option(t,v)));input.value=value;input.onchange=()=>{change(input.value);save();render();};return input;};

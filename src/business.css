@@ -334,3 +334,8 @@ body:has(.business-app:not([hidden])>.mapping-open:not([hidden])) {--properties-
 
 .canvas-controls-left {width:280px;min-width:0;max-width:calc(100vw - var(--properties-width,0px) - 88px)}
 .canvas-controls-left>input,.business-controls>input {width:280px;max-width:calc(100vw - var(--properties-width,0px) - 88px);height:34px}
+
+.toolbar-checks-panel {position:fixed;top:auto;bottom:88px;left:calc((100% - var(--properties-width,0px))/2);transform:translateX(-50%);width:min(420px,calc(100vw - 32px));max-height:min(360px,60dvh);z-index:21;padding:8px;border:1px solid var(--border-41);border-radius:9px;background:var(--surface-24);color:var(--text-221);overflow:auto;font-size:12px;box-shadow:0 8px 28px #0002}
+.toolbar-checks-panel[hidden] {display:none}
+.toolbar-checks-panel button {display:block;width:100%;padding:8px;text-align:left;border:0;border-radius:5px;background:transparent;color:inherit;font-size:12px;line-height:1.5}
+.toolbar-checks-panel button:hover {background:var(--surface-41)}
