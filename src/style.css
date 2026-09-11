@@ -280,7 +280,7 @@ button.column-summary-keys:focus-visible { outline: 1px solid var(--border-153);
 .mapping-editor, .key-editor { animation: reveal-editor 400ms cubic-bezier(.25,.1,.25,1); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
 /* Object-type header colors remain independent of lineage input colors. */
-.table-node .node-heading { color: var(--accent-blue); }
+.table-node .node-heading { color: var(--color-table); }
 
 @media (max-width: 900px) { #trace-legend { bottom: 132px; } }
 .canvas-controls-left {display:grid;grid-template-columns:max-content max-content max-content;gap:6px 4px;align-items:center}
@@ -291,7 +291,7 @@ button.column-summary-keys:focus-visible { outline: 1px solid var(--border-153);
 .canvas-controls-left > button[hidden] {display:none}
 .canvas-controls-left > #validation-button {justify-self:start}
 
-.node-header {flex-direction:row;align-items:center;justify-content:flex-start;gap:9px;color:var(--accent-blue)}
+.node-header {flex-direction:row;align-items:center;justify-content:flex-start;gap:9px;color:var(--color-table)}
 .node-header > svg {flex:none}
 .node-header .node-heading {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 

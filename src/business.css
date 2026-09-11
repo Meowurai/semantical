@@ -72,7 +72,7 @@
 .business-remove {opacity:0;transition:opacity 150ms}
 tr:hover .business-remove,.business-remove:focus-visible {opacity:1}
 .business-node,.business-node button {transition:border-color 200ms,background-color 160ms,opacity 450ms}
-.metric-node .business-coverage {color:var(--accent-purple)}
+.metric-node .business-coverage {color:var(--color-metric)}
 .business-drawer>section {animation:reveal-editor 400ms ease}
 @media(prefers-reduced-motion:reduce){.business-drawer,.business-node {transition:none}}
 .business-stage {overflow:clip}
@@ -101,11 +101,11 @@ tr:hover .business-remove,.business-remove:focus-visible {opacity:1}
 #app .canvas-navigation {position:fixed;top:16px;left:16px;right:250px;z-index:10}
 .business-add button,.toolbar button {display:flex;align-items:center;gap:9px}
 .business-add button svg,.toolbar button svg {width:16px;height:16px;flex:none}
-.business-app .business-node .business-node-header {color:var(--accent-green)}
-.business-app .metric-node .business-node-header {color:var(--accent-purple)}
-.toolbar button[aria-label="Create table"],.business-add button[aria-label="Create table"] {color:var(--accent-blue)}
-.toolbar button[aria-label="Create entity"],.business-add button[aria-label="Create entity"] {color:var(--accent-green)}
-.toolbar button[aria-label="Create metric"],.business-add button[aria-label="Create metric"] {color:var(--accent-purple)}
+.business-app .business-node .business-node-header {color:var(--color-entity)}
+.business-app .metric-node .business-node-header {color:var(--color-metric)}
+.toolbar button[aria-label="Create table"],.business-add button[aria-label="Create table"] {color:var(--color-table)}
+.toolbar button[aria-label="Create entity"],.business-add button[aria-label="Create entity"] {color:var(--color-entity)}
+.toolbar button[aria-label="Create metric"],.business-add button[aria-label="Create metric"] {color:var(--color-metric)}
 .business-attribute-row {display:flex;align-items:center;padding-right:8px;height:32px}
 .business-attribute-row .business-attribute {min-width:0;flex:1;padding-right:6px}
 .business-app .node-trace {flex:none;padding:4px 6px;font-size:10px;background:transparent;color:var(--text-170);opacity:.6}
@@ -146,16 +146,16 @@ body:has(#app:not([hidden]).drawer-open),body:has(.business-app:not([hidden])>.b
 .business-app .business-attribute-row:hover .node-trace:not(:disabled),.business-app .business-attribute-row:focus-within .node-trace:not(:disabled) {opacity:1}
 
 /* Metrics emphasize the calculation and its business context. */
-.business-app .metric-node .business-node-header {display:flex;align-items:center;gap:9px;height:48px;padding:0 16px;border-radius:0;border-bottom:1px solid color-mix(in srgb, var(--accent-purple) 18%, var(--border-24));font-size:13px;font-weight:500;background:color-mix(in srgb, var(--accent-purple) 5%, var(--surface-24))}
+.business-app .metric-node .business-node-header {display:flex;align-items:center;gap:9px;height:48px;padding:0 16px;border-radius:0;border-bottom:1px solid color-mix(in srgb, var(--color-metric) 18%, var(--border-24));font-size:13px;font-weight:500;background:color-mix(in srgb, var(--color-metric) 5%, var(--surface-24))}
 .metric-node .business-node-header svg {flex:none}
 .metric-name {overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.metric-status {margin-left:auto;flex:none;width:5px;height:5px;border-radius:50%;background:var(--accent-purple)}
+.metric-status {margin-left:auto;flex:none;width:5px;height:5px;border-radius:50%;background:var(--accent-green)}
 .metric-status.incomplete {background:var(--surface-119)}
 .metric-body {padding:12px}
 .metric-node .metric-calculation-row {height:34px;padding-right:2px;gap:4px;border-radius:5px}
-.metric-calculation-row:hover,.metric-calculation-row:focus-within {background:color-mix(in srgb, var(--accent-purple) 10%, var(--surface-24))}
+.metric-calculation-row:hover,.metric-calculation-row:focus-within {background:color-mix(in srgb, var(--color-metric) 10%, var(--surface-24))}
 .business-app .metric-calculation {display:flex;align-items:center;gap:9px;flex:1;min-width:0;padding:5px 4px;background:transparent;text-align:left}
-.metric-aggregation {flex:none;padding:3px 5px;border:1px solid color-mix(in srgb, var(--accent-purple) 28%, var(--border-24));border-radius:4px;background:color-mix(in srgb, var(--accent-purple) 10%, var(--surface-24));color:var(--accent-purple);font:10px/14px ui-monospace,monospace;text-transform:uppercase}
+.metric-aggregation {flex:none;padding:3px 5px;border:1px solid color-mix(in srgb, var(--color-metric) 28%, var(--border-24));border-radius:4px;background:color-mix(in srgb, var(--color-metric) 10%, var(--surface-24));color:var(--color-metric);font:10px/14px ui-monospace,monospace;text-transform:uppercase}
 .metric-value {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--text-238)}
 .metric-context {display:grid;grid-template-columns:42px minmax(0,1fr);gap:8px 10px;margin:12px 4px 3px;font-size:11px;line-height:16px}
 .metric-context dt {color:var(--text-136)}
@@ -196,7 +196,7 @@ body:has(.business-app:not([hidden])>.mapping-open:not([hidden])) {--properties-
 .mapping-results {max-height:55vh;overflow-y:auto}
 .mapping-workspace details {margin-top:12px;color:var(--text-153);font-size:12px}
 .semantic-usage {margin-top:24px;border-top:1px solid var(--border-51);padding-top:16px}
-.semantic-usage button {display:block;margin-top:8px;width:100%;text-align:left;padding:10px;background:var(--surface-36);color:var(--accent-green);border:0;border-radius:6px;font-size:12px}
+.semantic-usage button {display:block;margin-top:8px;width:100%;text-align:left;padding:10px;background:var(--surface-36);color:var(--color-entity);border:0;border-radius:6px;font-size:12px}
 .semantic-usage p {font-size:12px;color:var(--text-153)}
 .history-actions {border-bottom:1px solid var(--border-51);padding-bottom:10px;margin-bottom:14px}
 .history-actions button:disabled {opacity:.35}
@@ -208,8 +208,8 @@ body:has(.business-app:not([hidden])>.mapping-open:not([hidden])) {--properties-
 .business-drawer {font-size:12px}
 .business-drawer > header {height:65px;min-height:65px;padding:0;box-sizing:border-box}
 .drawer-title {display:flex;align-items:center;gap:10px;color:var(--text-238)}
-.drawer-title svg {color:var(--accent-green)}
-.metric-properties .drawer-title svg {color:var(--accent-purple)}
+.drawer-title svg {color:var(--color-entity)}
+.metric-properties .drawer-title svg {color:var(--color-metric)}
 .business-drawer > header button {display:grid;place-items:center;width:28px;height:28px;padding:6px;background:transparent}
 .business-drawer .business-tabs {gap:4px;padding:12px 0;margin:0 0 20px}
 .business-drawer .business-tabs button {padding:7px 10px}
