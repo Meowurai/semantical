@@ -322,3 +322,12 @@ body:has(.business-app:not([hidden])>.mapping-open:not([hidden])) {--properties-
 @media(prefers-reduced-motion:reduce) {
   .model-switch .share-menu:not([hidden]) {animation:none}
 }
+
+/* Canvas navigation is a compact vertical rail, separate from model actions. */
+.canvas-controls-right,.business-view-controls {left:16px;right:auto;bottom:28px;flex-direction:column;gap:2px;padding:5px;width:44px;border-radius:10px;background:var(--surface-24)}
+.canvas-controls-right button,.business-app .business-view-controls button {display:grid;place-items:center;width:34px;height:32px;padding:0;border:0;border-radius:5px;background:transparent;color:var(--text-170)}
+.canvas-controls-right button:hover,.business-app .business-view-controls button:hover {background:var(--surface-41);color:var(--text-252)}
+.canvas-controls-right .canvas-zoom-percentage,.business-app .business-view-controls .canvas-zoom-percentage {font-size:10px;font-variant-numeric:tabular-nums}
+.canvas-controls-right .canvas-view-divider,.business-app .business-view-controls .canvas-view-divider {margin-top:5px}
+#trace-legend {bottom:220px}
+@media(max-width:600px){.canvas-controls-right,.business-view-controls {bottom:88px}#trace-legend {bottom:280px}}

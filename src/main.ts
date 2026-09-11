@@ -1,3 +1,4 @@
+import {decorateCanvasControls} from './canvas-controls';
 import './palette.css';
 import {registerHistory,installHistory,recordPositionChange,beginHistory,commitHistory} from './history';
 import {shared,isReadOnly} from './sharing';
@@ -1151,6 +1152,7 @@ function initCanvasTools() {
   dependencies.setAttribute('aria-pressed', 'false');
   action('Fit', fitCanvas, undefined, right);
   action('Arrange', () => { beginHistory();stopNavigation(); columnFilter = null; layoutTables(nodes); fitCanvas();commitHistory(); }, undefined, right);
+  decorateCanvasControls(right);
   const checks = document.createElement('div'); checks.id = 'validation-list'; checks.className = 'validation-list'; checks.hidden = true;
   const checksButton = action('Checks', () => { checks.hidden = !checks.hidden; refreshValidation(); }, 'validation-button');
   left.insertBefore(checksButton, impact);

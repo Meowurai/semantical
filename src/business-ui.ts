@@ -1,3 +1,4 @@
+import {decorateCanvasControls} from './canvas-controls';
 import {installCommandPalette,type PaletteItem} from './command-palette';
 import {installHotkeys} from './hotkeys';
 import {setThemePreference} from './theme';
@@ -51,7 +52,7 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
   const fit=()=>{if(!model.entities.length&&!model.metrics.length)return;const maxX=Math.max(...[...model.entities,...model.metrics].map(e=>e.x+270)),maxY=Math.max(...[...model.entities.map(e=>e.y+48+Math.min(252,16+e.attributes.length*32)),...model.metrics.map(m=>m.y+170)]);zoom=Math.min(1,(stage.clientWidth-60)/maxX,(stage.clientHeight-100)/maxY);panX=20;panY=30;applyView();};
   const viewControls=el('div','','business-view-controls');viewControls.setAttribute('role','group');viewControls.setAttribute('aria-label','Canvas view');
   controls.append(search,checksButton);
-  viewControls.append(button('−',()=>{zoom=Math.max(.25,zoom/1.2);applyView();}),zoomLabel,button('+',()=>{zoom=Math.min(2,zoom*1.2);applyView();}),button('Fit',fit),button('Arrange',()=>{beginHistory();arrange();draw();fit();save();commitHistory();}));stage.append(controls,viewControls);
+  viewControls.append(button('−',()=>{zoom=Math.max(.25,zoom/1.2);applyView();}),zoomLabel,button('+',()=>{zoom=Math.min(2,zoom*1.2);applyView();}),button('Fit',fit),button('Arrange',()=>{beginHistory();arrange();draw();fit();save();commitHistory();}));decorateCanvasControls(viewControls);stage.append(controls,viewControls);
   const createMetric=()=>{
     switchView(true);active=undefined;section='Definition';
     const metric:Metric={id:crypto.randomUUID(),name:'New metric',definition:'',entityId:'',attributeId:'',aggregation:'Sum',timeAttributeId:'',dimensions:[],filters:'',representationId:'',x:(stage.clientWidth/2-panX)/zoom-135,y:(stage.clientHeight/2-panY)/zoom};
