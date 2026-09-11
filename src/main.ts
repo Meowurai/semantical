@@ -1080,7 +1080,7 @@ function fitCanvas() {
 function refreshValidation() {
   const list = document.querySelector('#validation-list'), button = document.querySelector('#validation-button');
   if (!list || !button) return;
-  const issues = validateModel(nodes); button.replaceChildren(createElement(CircleCheck,{width:16,height:16,'aria-hidden':'true'}),document.createTextNode(`Checks · ${issues.length}`));
+  const issues = validateModel(nodes); button.classList.toggle('checks-clear', issues.length === 0); button.replaceChildren(createElement(CircleCheck,{width:16,height:16,'aria-hidden':'true'}),document.createTextNode(`Checks · ${issues.length}`));
   list.replaceChildren();
   if (!issues.length) list.textContent = 'No definition issues found.';
   for (const issue of issues) {
@@ -1202,3 +1202,5 @@ document.addEventListener('lineage-relationships-changed',()=>{render();saveCanv
 document.addEventListener('navigate-lineage-table',event=>navigateToTable((event as CustomEvent<string>).detail));
 document.addEventListener('fit-lineage',fitCanvas);
 document.addEventListener('arrange-lineage',()=>{if(isReadOnly())return;beginHistory();stopNavigation();columnFilter=null;layoutTables(nodes);fitCanvas();commitHistory();});
+
+document.addEventListener('merge-fabric-lineage',event=>{if(isReadOnly())return;const data=(event as CustomEvent<TableNode[]>).detail;stopNavigation();nodes.splice(0,nodes.length,...data);columnScroll.clear();columnFilter=null;select(null);render();saveCanvas();});

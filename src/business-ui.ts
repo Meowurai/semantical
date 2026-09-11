@@ -1,3 +1,4 @@
+import {installFabric} from './fabric-ui';
 import {decorateCanvasControls} from './canvas-controls';
 import {installCommandPalette,type PaletteItem} from './command-palette';
 import {installHotkeys} from './hotkeys';
@@ -36,6 +37,7 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
   const p=button('Lineage',()=>switchView(false)),b=button('Semantics',()=>switchView(true));nav.append(p,b);p.setAttribute('aria-pressed','true');b.setAttribute('aria-pressed','false');installShareMenu(nav,physicalSnapshot,()=>model,()=>root.hidden?{
     name:'Lineage',description:'Remove all tables and lineage connections. Semantic bindings will be reported as missing.',run:()=>document.dispatchEvent(new Event('clear-lineage'))
   }:{name:'Semantics',description:'Remove all entities, metrics, relationships and semantic mappings. Physical tables remain.',run:()=>{beginHistory();model={version:1,entities:[],relationships:[],metrics:[]};active=undefined;activeMetric=undefined;drawer.hidden=true;save();render();commitHistory();}},data=>{beginHistory();document.dispatchEvent(new CustomEvent('import-lineage',{detail:data.lineage}));model=data.semantics;active=undefined;activeMetric=undefined;drawer.hidden=true;search.value='';save();render();fit();commitHistory();});
+  installFabric(tables,()=>model,(nodes,semantics)=>{beginHistory();document.dispatchEvent(new CustomEvent('merge-fabric-lineage',{detail:nodes}));model=semantics;active=undefined;activeMetric=undefined;drawer.hidden=true;save();render();commitHistory();});
   const arrange=()=>arrangeSemantic(model);
   const controls=el('div','','business-controls');
   const search=el('input');search.type='search';search.placeholder='Find entity or metric...';search.setAttribute('aria-label','Find entity');search.oninput=()=>draw();
@@ -45,7 +47,7 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
     checksPanel.replaceChildren();let count=0;
     for(const entity of model.entities){const issues=[...(!entity.name.trim()?['Entity name is required']:[]),...(!entity.grain.trim()?['Grain is undefined']:[]),...(coverage(entity,tables)!=='Mapped'?['Physical mapping is incomplete']:[])];for(const issue of issues){count++;checksPanel.append(button(`${entity.name} — ${issue}`,()=>{checksPanel.hidden=true;section=issue.includes('mapping')?'Mappings':'Definition';open(entity);}));}}
     for(const metric of model.metrics)for(const issue of metricIssues(metric,model,tables)){count++;checksPanel.append(button(`${metric.name} — ${issue}`,()=>{checksPanel.hidden=true;active=undefined;activeMetric=metric;section='Implementation';drawer.hidden=false;render();}));}
-    checksButton.replaceChildren(createElement(CircleCheck,{width:16,height:16,'aria-hidden':'true'}),el('span',`Checks · ${count}`));if(!count)checksPanel.append(el('p','No definition issues found.'));
+    checksButton.classList.toggle('checks-clear',count===0);checksButton.replaceChildren(createElement(CircleCheck,{width:16,height:16,'aria-hidden':'true'}),el('span',`Checks · ${count}`));if(!count)checksPanel.append(el('p','No definition issues found.'));
   }
   const applyView=()=>{drawing.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;zoomLabel.textContent=`${Math.round(zoom*100)}%`;};
   const zoomLabel=button('100%',()=>{zoom=1;applyView();});zoomLabel.setAttribute('aria-label','Reset business zoom');
@@ -359,6 +361,8 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
         item('entity','Create entity','E · Add a business entity',()=>entityButton.click()),
         item('metric','Create metric','M · Add a metric',()=>metricButton.click()),
         item('arrange','Arrange canvas','A · Organize the current model',()=>{if(root.hidden)document.dispatchEvent(new Event('arrange-lineage'));else{beginHistory();arrange();draw();fit();save();commitHistory();}}),
+        item('fabric','Import from Fabric…','Connect to a Fabric SQL endpoint',()=>document.dispatchEvent(new CustomEvent('open-fabric'))),
+        item('sources','Fabric sources','Refresh imported metadata',()=>document.dispatchEvent(new CustomEvent('open-fabric',{detail:'sources'}))),
         item('import','Import models','Load models from a JSON file',()=>menuAction('Import models…')),
         item('demo','Load demo','Load the Northstar company example',()=>menuAction('Load demo…')),
         item('clear','Clear canvas','Clear the current mode after confirmation',()=>menuAction('Clear canvas…')),

@@ -339,3 +339,6 @@ body:has(.business-app:not([hidden])>.mapping-open:not([hidden])) {--properties-
 .toolbar-checks-panel[hidden] {display:none}
 .toolbar-checks-panel button {display:block;width:100%;padding:8px;text-align:left;border:0;border-radius:5px;background:transparent;color:inherit;font-size:12px;line-height:1.5}
 .toolbar-checks-panel button:hover {background:var(--surface-41)}
+
+.toolbar.workspace-toolbar button.checks-clear {color:var(--text-119);opacity:.6}
+.toolbar.workspace-toolbar button.checks-clear:hover,.toolbar.workspace-toolbar button.checks-clear:focus-visible {opacity:1}
