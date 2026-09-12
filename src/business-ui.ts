@@ -124,7 +124,7 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
     overflow.style.left=`${Math.max(12,Math.min(area-260,toolbar.getBoundingClientRect().left))}px`;
   }
   new ResizeObserver(resizeToolbar).observe(stage);
-  new ResizeObserver(resizeToolbar).observe(physical);
+  new ResizeObserver(resizeToolbar).observe(physical.querySelector('main')!);
   document.addEventListener('pointerdown',event=>{if(!overflow.contains(event.target as Node)&&!more.contains(event.target as Node)){overflow.hidden=true;more.setAttribute('aria-expanded','false');}});
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!overflow.hidden){overflow.hidden=true;more.setAttribute('aria-expanded','false');more.focus();}});
   updateToolbar(false);

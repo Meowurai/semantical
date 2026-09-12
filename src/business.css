@@ -394,3 +394,4 @@ body:has(.workspace-toolbar.narrow) .canvas-controls-right,body:has(.workspace-t
   body:has(.business-app:not([hidden])>.mapping-open:not([hidden])) {--properties-width:min(800px,calc(100vw - 360px))}
 }
 body:has(.workspace-toolbar.narrow) .workspace-save-status {display:none}
+.workspace-identity {background:var(--surface-14);border-radius:6px;padding:2px 0 5px}
