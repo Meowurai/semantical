@@ -307,6 +307,11 @@ function select(id: string | null) {
   drawer.inert = id === null;
   const node = nodes.find((item) => item.id === id);
   if (node) {
+    if(!restoringTraceView && zoom<.75){
+      setZoom(.85);
+      const dx=(sceneWidth()-width)/2-node.x,dy=(sceneHeight()-nodeHeight(node))/2-node.y-30/zoom;
+      for(const item of nodes){item.x+=dx;item.y+=dy;}
+    }
     nameInput.value = node.name;
     logicInput.value = node.logic;
     document.querySelector<HTMLElement>('.transformation')!.hidden = false;

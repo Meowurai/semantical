@@ -388,3 +388,9 @@ body:has([data-trace-control]:not([hidden])) .workspace-identity {display:none}
 .toolbar.workspace-toolbar>select {width:112px;height:34px;padding:4px 8px;margin:0;background:var(--surface-24);color:var(--text-238);border:0;font-size:12px}
 body:has(.workspace-toolbar.narrow) .canvas-controls-right,body:has(.workspace-toolbar.narrow) .business-view-controls {bottom:96px}
 #app .canvas-controls-left>input {width:280px;min-width:0;flex:none}
+/* Keep enough canvas visible to read the selected node beside mappings. */
+@media(min-width:720px){
+  .business-drawer.mapping-open:not([hidden]) {flex-basis:min(800px,calc(100vw - 360px));width:min(800px,calc(100vw - 360px))}
+  body:has(.business-app:not([hidden])>.mapping-open:not([hidden])) {--properties-width:min(800px,calc(100vw - 360px))}
+}
+body:has(.workspace-toolbar.narrow) .workspace-save-status {display:none}
