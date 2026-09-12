@@ -1,3 +1,4 @@
+import {installWorkspaceGuidance} from './workspace-guidance';
 import {decorateCanvasControls} from './canvas-controls';
 import {installCommandPalette,type PaletteItem} from './command-palette';
 import {installHotkeys} from './hotkeys';
@@ -8,7 +9,7 @@ import {mappingWorkspace} from './mapping-workspace';
 import {registerHistory,beginHistory,commitHistory,undo,redo,historyState} from './history';
 import {shared,isReadOnly,installShareMenu} from './sharing';
 import {nodeMenu} from './node-menu';
-import {createElement,Table2,Shapes,ChartNoAxesCombined,ArrowUpRight,Pencil,X,Plus,GitBranch,Network,CircleCheck} from 'lucide';
+import {createElement,Table2,Shapes,ChartNoAxesCombined,ArrowUpRight,Pencil,X,Plus,GitBranch,Network,CircleCheck,Ellipsis} from 'lucide';
 import {arrangeSemantic} from './semantic-layout';
 import {routeAssociations,roundedPath} from './routing';
 import {coverage,decodeBusiness,seedBusiness,metricIssues,type Metric,type BusinessModel,type Entity,type Attribute} from './business-model';
@@ -32,7 +33,7 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
   }}
   catch {writable=false;notice.textContent='Saved business model could not be loaded. Saving is paused to protect it.';notice.hidden=false;}
   const save=()=>{if(isReadOnly()||!writable)return;try{localStorage.setItem(key,JSON.stringify(model));notice.hidden=true;}catch{notice.textContent='Business changes could not be saved locally. Keep this tab open.';notice.hidden=false;}};
-  const switchView=(business:boolean)=>{updateToolbar(business);physical.hidden=business;root.hidden=!business;p.setAttribute('aria-pressed',String(!business));b.setAttribute('aria-pressed',String(business));if(business){render();if(firstView){firstView=false;requestAnimationFrame(fit);}}};
+  const switchView=(business:boolean)=>{updateToolbar(business);physical.hidden=business;root.hidden=!business;p.setAttribute('aria-pressed',String(!business));b.setAttribute('aria-pressed',String(business));document.dispatchEvent(new Event('canvas-content-change'));if(business){render();if(firstView){firstView=false;requestAnimationFrame(fit);}}};
   const p=button('Lineage',()=>switchView(false)),b=button('Semantics',()=>switchView(true));nav.append(p,b);p.setAttribute('aria-pressed','true');b.setAttribute('aria-pressed','false');installShareMenu(nav,physicalSnapshot,()=>model,()=>root.hidden?{
     name:'Lineage',description:'Remove all tables and lineage connections. Semantic bindings will be reported as missing.',run:()=>document.dispatchEvent(new Event('clear-lineage'))
   }:{name:'Semantics',description:'Remove all entities, metrics, relationships and semantic mappings. Physical tables remain.',run:()=>{beginHistory();model={version:1,entities:[],relationships:[],metrics:[]};active=undefined;activeMetric=undefined;drawer.hidden=true;save();render();commitHistory();}},data=>{beginHistory();document.dispatchEvent(new CustomEvent('import-lineage',{detail:data.lineage}));model=data.semantics;active=undefined;activeMetric=undefined;drawer.hidden=true;search.value='';save();render();fit();commitHistory();});
@@ -47,9 +48,25 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
     for(const metric of model.metrics)for(const issue of metricIssues(metric,model,tables)){count++;checksPanel.append(button(`${metric.name} — ${issue}`,()=>{checksPanel.hidden=true;active=undefined;activeMetric=metric;section='Implementation';drawer.hidden=false;render();}));}
     checksButton.classList.toggle('checks-clear',count===0);checksButton.replaceChildren(createElement(CircleCheck,{width:16,height:16,'aria-hidden':'true'}),el('span',`Checks · ${count}`));if(!count)checksPanel.append(el('p','No definition issues found.'));
   }
-  const applyView=()=>{drawing.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;zoomLabel.textContent=`${Math.round(zoom*100)}%`;};
+  const applyView=()=>{stage.classList.toggle('overview-mode',zoom<.6);drawing.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;zoomLabel.textContent=`${Math.round(zoom*100)}%`;};
   const zoomLabel=button('100%',()=>{zoom=1;applyView();});zoomLabel.setAttribute('aria-label','Reset business zoom');
-  const fit=()=>{if(!model.entities.length&&!model.metrics.length)return;const maxX=Math.max(...[...model.entities,...model.metrics].map(e=>e.x+270)),maxY=Math.max(...[...model.entities.map(e=>e.y+48+Math.min(252,16+e.attributes.length*32)),...model.metrics.map(m=>m.y+170)]);zoom=Math.min(1,(stage.clientWidth-60)/maxX,(stage.clientHeight-100)/maxY);panX=20;panY=30;applyView();};
+  const bounds=()=>[...model.entities.map(e=>({ ...e,height:48+Math.min(252,16+e.attributes.length*32)})),...model.metrics.map(m=>({...m,height:170}))];
+  const fit=()=>{
+    const items=bounds();if(!items.length||!stage.clientWidth)return;
+    const left=Math.min(...items.map(e=>e.x)),top=Math.min(...items.map(e=>e.y));
+    const w=Math.max(...items.map(e=>e.x+270))-left,h=Math.max(...items.map(e=>e.y+e.height))-top;
+    const availableW=Math.max(80,stage.clientWidth-100),availableH=Math.max(80,stage.clientHeight-150);
+    zoom=Math.min(1,availableW/w,availableH/h);
+    panX=76+(availableW-w*zoom)/2-left*zoom;panY=44+(availableH-h*zoom)/2-top*zoom;applyView();
+  };
+  function focusSelection(){
+    const selected=activeMetric??active;if(!selected||drawer.hidden)return;
+    const h=bounds().find(e=>e.id===selected.id)?.height??170;
+    zoom=Math.min(Math.max(zoom,.85),Math.max(.2,(stage.clientWidth-100)/270),Math.max(.2,(stage.clientHeight-150)/h));
+    panX=76+(stage.clientWidth-100-270*zoom)/2-selected.x*zoom;
+    panY=44+(stage.clientHeight-150-h*zoom)/2-selected.y*zoom;applyView();
+  }
+
   const viewControls=el('div','','business-view-controls');viewControls.setAttribute('role','group');viewControls.setAttribute('aria-label','Canvas view');
   controls.append(search,checksButton);
   viewControls.append(button('−',()=>{zoom=Math.max(.25,zoom/1.2);applyView();}),zoomLabel,button('+',()=>{zoom=Math.min(2,zoom*1.2);applyView();}),button('Fit',fit),button('Arrange',()=>{beginHistory();arrange();draw();fit();save();commitHistory();}));decorateCanvasControls(viewControls);stage.append(controls,viewControls);
@@ -70,7 +87,7 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
   const tableButton=toolbar.querySelector<HTMLButtonElement>('#add-table')!;tools.append(tableButton);
   const entityButton=button('Entity',createEntity);entityButton.setAttribute('aria-label','Create entity');
   const metricButton=button('Metric',createMetric);metricButton.setAttribute('aria-label','Create metric');tools.append(entityButton,metricButton);
-  for(const [action,label,icon] of [[tableButton,'Add table',Table2],[entityButton,'Add entity',Shapes],[metricButton,'Add metric',ChartNoAxesCombined]] as const){action.replaceChildren(createElement(icon,{'aria-hidden':'true',width:16,height:16,'stroke-width':1.5}),el('span',label));}
+  for(const [action,label,icon] of [[tableButton,'Add table',Table2],[entityButton,'Add entity',Shapes],[metricButton,'Add metric',ChartNoAxesCombined]] as const){action.title=label;action.replaceChildren(createElement(icon,{'aria-hidden':'true',width:16,height:16,'stroke-width':1.5}),el('span',label));}
   const relations=relationshipManager(tables,()=>model,()=>{document.dispatchEvent(new Event('lineage-relationships-changed'));save();render();},isReadOnly);
   const relationsButton=button('Relationships',()=>relations.open(root.hidden?'lineage':'semantics'));toolbar.append(relationsButton);
   const physicalChecks=document.querySelector<HTMLButtonElement>('#validation-button')!;
@@ -86,18 +103,36 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
     relationsButton.setAttribute('aria-label',semantic?'Manage entity relationships':'Manage lineage relationships');
     resizeToolbar();
   }
+  const overflow=el('div','','toolbar-overflow');overflow.hidden=true;overflow.setAttribute('role','group');overflow.setAttribute('aria-label','More model tools');document.body.append(overflow);
+  const more=button('',()=>{overflow.hidden=!overflow.hidden;more.setAttribute('aria-expanded',String(!overflow.hidden));if(!overflow.hidden)overflow.querySelector<HTMLButtonElement>('button:not([hidden])')?.focus();});
+  more.append(createElement(Ellipsis,{width:18,height:18,'aria-hidden':'true'}));more.setAttribute('aria-label','More model tools');more.setAttribute('aria-expanded','false');toolbar.append(more);
+  overflow.addEventListener('click',event=>{if((event.target as Element).closest('button')){overflow.hidden=true;more.setAttribute('aria-expanded','false');}});
+  const modeSelect=el('select');modeSelect.setAttribute('aria-label','Model view');modeSelect.add(new Option('Lineage','lineage'));modeSelect.add(new Option('Semantics','semantics'));modeSelect.onchange=()=>switchView(modeSelect.value==='semantics');toolbar.prepend(modeSelect);
+  const secondary=[relationsButton,physicalChecks,checksButton];
   function resizeToolbar(){
-    const visible=[...toolbar.children].filter(child=>getComputedStyle(child).display!=='none');
-    const style=getComputedStyle(toolbar);
-    const contentWidth=visible.reduce((sum,child)=>sum+child.getBoundingClientRect().width,0);
-    toolbar.style.width=`${Math.ceil(contentWidth+parseFloat(style.paddingLeft)+parseFloat(style.paddingRight)+Math.max(0,visible.length-1)*parseFloat(style.gap))}px`;
+    if(!more)return;
+    // Measure the remaining canvas directly: CSS custom widths can contain min().
+    const area=root.hidden?physical.querySelector('main')?.clientWidth??window.innerWidth:stage.clientWidth;
+    const compact=area-96<690,narrow=area<420;
+    modeSelect.hidden=!narrow;modeSelect.value=root.hidden?'lineage':'semantics';chooser.hidden=narrow;toolbar.classList.toggle('narrow',narrow);
+    for(const action of [tableButton,entityButton,metricButton]){if(!isReadOnly())(narrow?overflow:tools).append(action);}
+
+    for(const action of secondary)(compact?overflow:toolbar).append(action);
+    more.hidden=!compact;toolbar.classList.toggle('compact',compact);
+    if(!compact){overflow.hidden=true;more.setAttribute('aria-expanded','false');}
+    toolbar.style.width='max-content';
+    overflow.style.left=`${Math.max(12,Math.min(area-260,toolbar.getBoundingClientRect().left))}px`;
   }
-  new MutationObserver(resizeToolbar).observe(toolbar,{childList:true,subtree:true});
+  new ResizeObserver(resizeToolbar).observe(stage);
+  new ResizeObserver(resizeToolbar).observe(physical);
+  document.addEventListener('pointerdown',event=>{if(!overflow.contains(event.target as Node)&&!more.contains(event.target as Node)){overflow.hidden=true;more.setAttribute('aria-expanded','false');}});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!overflow.hidden){overflow.hidden=true;more.setAttribute('aria-expanded','false');more.focus();}});
   updateToolbar(false);
+  installWorkspaceGuidance(()=>root.hidden?tables.length===0:model.entities.length+model.metrics.length===0,()=>root.hidden?'Lineage':'Semantics',key);
   const field=(label:string,value:string,change:(value:string)=>void,multiline=false)=>{const wrapper=el('label',label);const input=multiline?el('textarea'):el('input');input.value=value;if(input instanceof HTMLTextAreaElement)input.rows=2;input.setAttribute('aria-label',label);input.oninput=()=>{change(input.value);save();draw();};wrapper.append(input);return wrapper;};
   const select=(label:string,value:string,options:[string,string][],change:(value:string)=>void)=>{const input=el('select');input.setAttribute('aria-label',label);options.forEach(([v,t])=>input.add(new Option(t,v)));input.value=value;input.onchange=()=>{change(input.value);save();render();};return input;};
   const check=(label:string,value:boolean,change:(value:boolean)=>void)=>{const l=el('label',label,'business-check');const i=el('input');i.type='checkbox';i.checked=value;i.onchange=()=>{change(i.checked);save();draw();};l.prepend(i);return l;};
-  const open=(entity:Entity)=>{activeMetric=undefined;active=entity;drawer.hidden=false;render();requestAnimationFrame(()=>{const right=(entity.x+270)*zoom+panX;if(right>stage.clientWidth-24){panX-=right-stage.clientWidth+24;applyView();}});};
+  const open=(entity:Entity)=>{activeMetric=undefined;active=entity;drawer.hidden=false;render();requestAnimationFrame(focusSelection);};
   let restoringView=false;
   let semanticReturn:(()=>void)|undefined;
   const captureSemantic=()=>{
@@ -137,6 +172,7 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
   function draw() {
     closeTraceMenu();
     refreshChecks();
+    document.dispatchEvent(new Event('canvas-content-change'));
     drawing.replaceChildren();
     const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.classList.add('business-links');drawing.append(svg);
     const routes=routeAssociations([...model.entities.map(e=>({id:e.id,x:e.x,y:e.y,width:270,height:48+Math.min(252,16+e.attributes.length*32)})),...model.metrics.map(m=>({id:m.id,x:m.x,y:m.y,width:270,height:162}))],[...model.relationships.map(r=>({source:r.from,target:r.to})),...model.metrics.map(m=>({source:m.entityId,target:m.id}))]);
@@ -152,7 +188,7 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
       const label=button(labelText,()=>{section='Relationships';open(from);});label.className='business-link-label';label.dataset.relationship=r.id;label.style.left=`${placement.x}px`;label.style.top=`${placement.y}px`;drawing.append(label);
     }
     for(const entity of model.entities) {
-      const card=el('article','','business-node');card.style.left=`${entity.x}px`;card.style.top=`${entity.y}px`;card.classList.toggle('selected',active===entity);card.style.opacity=search.value&&!entity.name.toLowerCase().includes(search.value.toLowerCase())?'.18':'1';
+      const card=el('article','','business-node');card.dataset.summary=`${entity.attributes.length} ${entity.attributes.length===1?'attribute':'attributes'}`;card.style.left=`${entity.x}px`;card.style.top=`${entity.y}px`;card.classList.toggle('selected',active===entity);card.style.opacity=search.value&&!entity.name.toLowerCase().includes(search.value.toLowerCase())?'.18':'1';
       const header=button('',()=>{section='Definition';open(entity);});header.className='business-node-header';
       header.append(createElement(Shapes,{width:16,height:16,'stroke-width':1.5,'aria-hidden':'true'}),el('span',entity.name||'Unnamed entity','entity-name'));
       installDrag(header,card,entity);
@@ -194,7 +230,7 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
       const attribute=entity?.attributes.find(a=>a.id===metric.attributeId);
       const card=el('article','','business-node metric-node');card.style.left=`${metric.x}px`;card.style.top=`${metric.y}px`;card.classList.toggle('selected',activeMetric===metric);
       card.style.opacity=search.value&&!metric.name.toLowerCase().includes(search.value.toLowerCase())?'.18':'1';
-      const openMetric=()=>{active=undefined;activeMetric=metric;section='Definition';drawer.hidden=false;render();requestAnimationFrame(()=>{panX=Math.min(panX,stage.clientWidth-24-(metric.x+270)*zoom);applyView();});};
+      const openMetric=()=>{active=undefined;activeMetric=metric;section='Definition';drawer.hidden=false;render();requestAnimationFrame(focusSelection);};
       const header=button('',openMetric);header.className='business-node-header';
       const issues=metricIssues(metric,model,tables);
       const status=el('span','','metric-status');status.classList.toggle('incomplete',!!issues.length);status.title=issues.length?'Incomplete metric':'Metric is fully bound';
@@ -329,7 +365,7 @@ export function initBusiness(tables:TableNode[],key:string,example:boolean,physi
   stage.addEventListener('wheel',e=>{if((e.target as Element).closest('.business-controls, .business-view-controls'))return;e.preventDefault();if(e.ctrlKey){const rect=stage.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;const next=Math.max(.25,Math.min(2,zoom*Math.exp(-e.deltaY*.01)));panX=x-(x-panX)*next/zoom;panY=y-(y-panY)*next/zoom;zoom=next;}else{panX-=e.deltaX;panY-=e.deltaY;}applyView();},{passive:false});
   document.addEventListener('keydown',e=>{if(!root.hidden&&e.key==='Escape'){active=undefined;activeMetric=undefined;drawer.hidden=true;draw();}});
   let previousWidth=0;
-  new ResizeObserver(()=>{if(root.hidden||restoringView)return;const width=stage.clientWidth;if(previousWidth){panX+=width-previousWidth;const selected=activeMetric??active;if(selected&&!drawer.hidden){panX=Math.min(panX,width-24-(selected.x+270)*zoom);}}previousWidth=width;applyView();}).observe(stage);
+  new ResizeObserver(()=>{if(root.hidden||restoringView)return;const width=stage.clientWidth;if(activeMetric||active)focusSelection();else if(previousWidth)panX+=(width-previousWidth)/2;previousWidth=width;applyView();}).observe(stage);
   if(writable){if(freshModel)arrange();save();}
   const focusEntity=(entity:Entity,attributeId?:string)=>{switchView(true);section='Definition';open(entity);requestAnimationFrame(()=>{panX=(stage.clientWidth-270*zoom)/2-entity.x*zoom;panY=Math.max(32,(stage.clientHeight-250*zoom)/2)-entity.y*zoom;applyView();if(attributeId){const attr=entity.attributes.find(a=>a.id===attributeId);[...drawer.querySelectorAll<HTMLInputElement>('input')].find(input=>input.value===attr?.name)?.focus();}});};
   const focusMetric=(metric:Metric)=>{switchView(true);active=undefined;activeMetric=metric;section='Definition';drawer.hidden=false;render();requestAnimationFrame(()=>{panX=(stage.clientWidth-270*zoom)/2-metric.x*zoom;panY=(stage.clientHeight-170*zoom)/2-metric.y*zoom;applyView();});};

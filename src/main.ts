@@ -154,6 +154,8 @@ function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string,
 
 let previousClickState = '';
 function render() {
+  document.dispatchEvent(new Event('canvas-content-change'));
+  canvas.classList.toggle('overview-mode',zoom<.6 && !columnFilter);
   renderTraceDrawer();
   const clickState = JSON.stringify([selected, columnFilter, traceDirection, showDependencies]);
   const animateClick = previousClickState !== '' && previousClickState !== clickState && !matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -191,13 +193,13 @@ function render() {
     const headerContent = document.createElement('div'); headerContent.className = 'node-header';
     const title = document.createElement('span');
     title.className = 'node-heading';
-    title.textContent = qualifiedName;
+    title.textContent = zoom<.6&&!columnFilter?node.name:qualifiedName;title.title=qualifiedName;
     headerContent.append(createElement(Table2,{width:16,height:16,'stroke-width':1.5,'aria-hidden':'true'}),title); header.append(headerContent); group.append(header);
     if (node.columns.length) {
       group.append(svg('line', { x1: '0', y1: String(headerHeight), x2: String(width), y2: String(headerHeight), stroke: 'var(--border-54)', 'pointer-events': 'none' }));
       const body = svg('foreignObject', { x: '1', y: String(headerHeight + 1), width: String(width - 2), height: String(columnBodyHeight(node) - headerHeight - 2) });
       const scroller = document.createElement('div');
-      scroller.className = 'node-columns';
+      scroller.className = 'node-columns';scroller.dataset.summary=`${node.columns.length} columns`;
       const columnFrame=document.createElement('div');columnFrame.className='node-column-frame';
       columnFrame.classList.toggle('scrollable',headerHeight+visibleColumns(node).length*32+16>maxNodeHeight);
       const updateFade=()=>columnFrame.classList.toggle('more-below',scroller.scrollHeight-scroller.clientHeight-scroller.scrollTop>2);
@@ -1072,9 +1074,9 @@ function fitCanvas() {
   if (!nodes.length) return;
   const left = Math.min(...nodes.map(n => n.x)), top = Math.min(...nodes.map(n => n.y));
   const right = Math.max(...nodes.map(n => n.x + width)), bottom = Math.max(...nodes.map(n => n.y + nodeHeight(n)));
-  setZoom(Math.min(1, (canvas.clientWidth - 80) / (right - left), (canvas.clientHeight - 150) / (bottom - top)));
-  const dx = (sceneWidth() - (right - left)) / 2 - Math.min(...nodes.map(n => n.x));
-  const dy = (sceneHeight() - (bottom - top)) / 2 - Math.min(...nodes.map(n => n.y));
+  setZoom(Math.min(1, (canvas.clientWidth - 100) / (right - left), (canvas.clientHeight - 150) / (bottom - top)));
+  const dx = (sceneWidth() - (right - left)) / 2 + 26/zoom - Math.min(...nodes.map(n => n.x));
+  const dy = (sceneHeight() - (bottom - top)) / 2 - 30/zoom - Math.min(...nodes.map(n => n.y));
   nodes.forEach(n => { n.x += dx; n.y += dy; }); render();
 }
 function refreshValidation() {

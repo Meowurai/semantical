@@ -31,6 +31,7 @@ export async function shareURL(physical:string,business:BusinessModel,mode:'view
 export function installShareMenu(nav:HTMLElement,snapshot:()=>string,business:()=>BusinessModel,clearCanvas:()=>{name:string;description:string;run:()=>void},importModel:(data:ModelFile)=>void) {
   const toggle=document.createElement('button');toggle.type='button';toggle.setAttribute('aria-label','Share menu');toggle.setAttribute('aria-expanded','false');toggle.append(createElement(Menu,{width:16,height:16,'aria-hidden':'true'}));
   const panel=document.createElement('div');panel.className='share-menu';panel.hidden=true;panel.setAttribute('aria-label','Model menu');
+  document.addEventListener('model-menu-action',event=>{panel.hidden=false;toggle.setAttribute('aria-expanded','true');panel.querySelector<HTMLButtonElement>(`[data-model-action="${(event as CustomEvent).detail}"]`)?.click();});
   const close=()=>{panel.hidden=true;toggle.setAttribute('aria-expanded','false');};
   toggle.onclick=()=>{panel.hidden=!panel.hidden;toggle.setAttribute('aria-expanded',String(!panel.hidden));};
   const navigation=document.createElement('div');navigation.className='history-actions';
@@ -58,7 +59,7 @@ export function installShareMenu(nav:HTMLElement,snapshot:()=>string,business:()
     const picker=document.createElement('input');picker.type='file';picker.accept='.json,application/json';picker.hidden=true;picker.setAttribute('aria-label','Import model file');
     const importButton=document.createElement('button');importButton.type='button';importButton.append(createElement(Upload,{width:15,height:15,'aria-hidden':'true'}),document.createTextNode('Import models…'));
     const preview=document.createElement('div');preview.className='clear-canvas-confirm';preview.hidden=true;
-    importButton.onclick=()=>{picker.value='';preview.hidden=true;picker.click();};
+    importButton.dataset.modelAction='import';importButton.onclick=()=>{picker.value='';preview.hidden=true;picker.click();};
     picker.onchange=async()=>{const file=picker.files?.[0];if(!file)return;status.textContent='';preview.hidden=true;try{
       if(file.size>10*1024*1024)throw Error('Choose a model file smaller than 10 MB.');
       const data=decodeModelFile(await file.text());preview.replaceChildren();const description=document.createElement('p');description.textContent=`Replace both models with ${data.lineage.nodes.length} tables, ${data.semantics.entities.length} entities and ${data.semantics.metrics.length} metrics from ${file.name}? You can undo this.`;
@@ -70,7 +71,7 @@ export function installShareMenu(nav:HTMLElement,snapshot:()=>string,business:()
   if(!isReadOnly()){
     const demo=document.createElement('button');demo.type='button';demo.append(createElement(FlaskConical,{width:15,height:15,'aria-hidden':'true'}),document.createTextNode('Load demo…'));
     const preview=document.createElement('div');preview.className='clear-canvas-confirm';preview.hidden=true;
-    demo.onclick=()=>{
+    demo.dataset.modelAction='demo';demo.onclick=()=>{
       preview.replaceChildren();const description=document.createElement('p');description.textContent='Load the Northstar company demo? This replaces both models with example tables, entities, mappings and metrics. You can undo this.';
       const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Cancel';cancel.onclick=()=>{preview.hidden=true;demo.focus();};
       const apply=document.createElement('button');apply.type='button';apply.textContent='Load demo';apply.onclick=()=>{const nodes=companyExample();const semantics=seedBusiness(nodes);arrangeSemantic(semantics);importModel({format:'data-canvas',version:1,lineage:{version:1,canvasWidth:1266,zoom:1,nodes},semantics});preview.hidden=true;close();};
@@ -80,8 +81,8 @@ export function installShareMenu(nav:HTMLElement,snapshot:()=>string,business:()
   panel.append(files);
   const shareHeading=document.createElement('div');shareHeading.className='share-heading';
   const heading=document.createElement('strong');heading.textContent='Share';
-  const info=document.createElement('button');info.type='button';info.className='share-info';info.setAttribute('aria-label','About sharing');info.setAttribute('aria-expanded','false');info.append(createElement(Info,{width:14,height:14,'aria-hidden':'true'}));
-  const help=document.createElement('div');help.className='share-help';help.id='share-help';help.hidden=true;info.setAttribute('aria-controls',help.id);
+  const info=document.createElement('button');info.type='button';info.className='share-info';info.setAttribute('aria-label','About sharing');info.setAttribute('aria-expanded','true');info.append(createElement(Info,{width:14,height:14,'aria-hidden':'true'}));
+  const help=document.createElement('div');help.className='share-help';help.id='share-help';help.hidden=false;info.setAttribute('aria-controls',help.id);
   info.onclick=()=>{help.hidden=!help.hidden;info.setAttribute('aria-expanded',String(!help.hidden));};
   shareHeading.append(heading,info);panel.append(shareHeading);
   for(const mode of ['view','edit'] as const){if(isReadOnly()&&mode==='edit')continue;

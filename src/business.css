@@ -342,3 +342,49 @@ body:has(.business-app:not([hidden])>.mapping-open:not([hidden])) {--properties-
 
 .toolbar.workspace-toolbar button.checks-clear {color:var(--text-119);opacity:.6}
 .toolbar.workspace-toolbar button.checks-clear:hover,.toolbar.workspace-toolbar button.checks-clear:focus-visible {opacity:1}
+
+/* Keep primary actions accessible when an inspector reduces the canvas. */
+.toolbar.workspace-toolbar {max-width:calc(100vw - var(--properties-width,0px) - 96px);overflow:visible;min-width:0}
+.toolbar-overflow {position:fixed;bottom:88px;z-index:30;width:248px;padding:6px;background:var(--surface-24);border-radius:10px;box-shadow:0 8px 28px #0002}
+.toolbar-overflow[hidden],.toolbar-overflow button[hidden] {display:none}
+.toolbar-overflow button {display:flex;gap:10px;align-items:center;width:100%;padding:10px;text-align:left;background:transparent;color:var(--text-238);border:0;border-radius:6px}
+.toolbar-overflow button:hover {background:var(--surface-41)}
+.toolbar.workspace-toolbar.compact .toolbar-create-tools button {padding:10px}
+.toolbar.workspace-toolbar.compact .toolbar-create-tools button span {display:none}
+.toolbar-checks-panel {max-width:calc(100vw - var(--properties-width,0px) - 24px)}
+.business-drawer .attribute-grid td {padding:2px 4px}
+.business-drawer .attribute-grid .attribute-flags .business-check {min-height:28px;min-width:32px;font-size:10px;cursor:pointer;margin:0 3px 0 0}
+.business-drawer .attribute-grid .business-check input {width:14px;height:14px}
+.business-drawer .attribute-grid button {width:28px;height:28px}
+.business-drawer .business-tabs {margin-bottom:12px}
+.business-drawer label {margin-bottom:12px}
+.workspace-identity {position:fixed;z-index:9;top:58px;left:16px;display:flex;flex-direction:column;gap:3px;max-width:calc(100vw - var(--properties-width,0px) - 88px)}
+.workspace-identity input {width:240px;max-width:100%;height:26px;margin:0;padding:2px 8px;border:0;background:transparent;font-size:12px;color:var(--text-238)}
+.workspace-save-status {font-size:10px;color:var(--text-153);padding-left:8px}
+body:has([data-trace-control]:not([hidden])) .workspace-identity {display:none}
+.workspace-empty {position:fixed;left:calc((100vw - var(--properties-width,0px))/2);top:42%;transform:translate(-50%,-50%);width:360px;max-width:calc(100vw - var(--properties-width,0px) - 96px);text-align:center;color:var(--text-238)}
+.workspace-empty[hidden] {display:none}
+.workspace-empty h1 {font-size:20px;font-weight:500}
+.workspace-empty p {font-size:13px;line-height:1.6;color:var(--text-153)}
+.workspace-empty>div {display:flex;gap:8px;justify-content:center;margin-top:20px}
+.workspace-empty button {padding:10px 14px;background:var(--surface-24);color:var(--text-238);border:0;border-radius:6px}
+.overview-mode .business-node:not(.selected) .entity-attributes {visibility:hidden}
+.overview-mode .business-node:not(.selected):not(.metric-node)::after {content:attr(data-summary);position:absolute;top:64px;left:16px;font-size:18px;color:var(--text-170);pointer-events:none}
+.overview-mode .business-node-header {font-size:18px}
+.overview-mode .business-link-label {font-size:14px}
+.overview-mode .table-node:not(.selected) .node-columns>* {visibility:hidden}
+.overview-mode .table-node:not(.selected) .node-columns::after {content:attr(data-summary);position:absolute;top:18px;left:16px;font-size:18px;color:var(--text-170);pointer-events:none}
+.overview-mode .node-heading {font-size:18px}
+@media(max-width:600px){
+  .toolbar.workspace-toolbar {max-width:calc(100vw - 24px);left:50%;bottom:16px}
+  .workspace-identity {display:none}
+}
+.business-drawer .attribute-grid th:last-child {width:64px}
+.business-drawer .attribute-grid td:last-child {white-space:nowrap}
+.business-app .overview-mode .business-node .business-node-header {font-size:18px}
+.business-app .overview-mode .metric-node .metric-calculation {font-size:16px}
+.toolbar.workspace-toolbar [hidden] {display:none}
+.toolbar.workspace-toolbar.narrow {max-width:calc(100vw - var(--properties-width,0px) - 24px)}
+.toolbar.workspace-toolbar>select {width:112px;height:34px;padding:4px 8px;margin:0;background:var(--surface-24);color:var(--text-238);border:0;font-size:12px}
+body:has(.workspace-toolbar.narrow) .canvas-controls-right,body:has(.workspace-toolbar.narrow) .business-view-controls {bottom:96px}
+#app .canvas-controls-left>input {width:280px;min-width:0;flex:none}
